@@ -1,0 +1,28 @@
+# IDE
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# EEG datasets
+data/*
+!data/.gitkeep
+
+# Generated results
+results/*
+!results/.gitkeep
+
+# Generated figures
+figures/*
+!figures/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
