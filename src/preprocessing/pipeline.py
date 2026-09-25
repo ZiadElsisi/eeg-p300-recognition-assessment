@@ -3,8 +3,10 @@ from pathlib import Path
 import mne
 import numpy as np
 from mne.io.constants import FIFF
-from moabb.datasets import BNCI2014_008
+from src.loaders.bnci2014_008 import load_bnci2014_008
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PREPROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "preprocessed"
 
 # The artifact threshold is configurable because the guide says to use the
 # "planned amplitude rule", but it does not define the numeric threshold.
@@ -25,6 +27,7 @@ H_FREQ = 30.0
 # The public BNCI2014-008 distribution is already documented as having a
 # 50 Hz notch filter. We therefore keep the notch OFF by default to avoid
 # applying the same notch twice to an already filtered public signal.
+
 APPLY_NOTCH = False
 NOTCH_FREQ = 50.0
 
@@ -50,20 +53,20 @@ EEG_CHANNELS = [
 ]
 
 
-def _print_event_counts(events: np.ndarray, event_id: dict) -> None:
-    """Print Target/NonTarget counts in a readable way."""
-    print("\n=== Event Verification ===")
-
-    for label, code in event_id.items():
-        count = int(np.sum(events[:, 2] == code))
-        print(f"[Record] {label}: {count}")
-
-    unexpected = sorted(set(np.unique(events[:, 2])) - set(event_id.values()))
-    if unexpected:
-        raise ValueError(
-            f"Unexpected event codes found: {unexpected}. "
-            "Check the event channel and dataset metadata."
-        )
+# def _print_event_counts(events: np.ndarray, event_id: dict) -> None:
+#     """Print Target/NonTarget counts in a readable way."""
+#     print("\n=== Event Verification ===")
+#
+#     for label, code in event_id.items():
+#         count = int(np.sum(events[:, 2] == code))
+#         print(f"[Record] {label}: {count}")
+#
+#     unexpected = sorted(set(np.unique(events[:, 2])) - set(event_id.values()))
+#     if unexpected:
+#         raise ValueError(
+#             f"Unexpected event codes found: {unexpected}. "
+#             "Check the event channel and dataset metadata."
+#         )
 
 
 def _verify_units(raw: mne.io.BaseRaw) -> None:
@@ -85,13 +88,13 @@ def _verify_units(raw: mne.io.BaseRaw) -> None:
             "Do not apply the artifact threshold until unit handling is verified."
         )
 
-    print("\n=== Unit Verification ===")
-    print("[Record] MNE EEG unit: volts (V)")
-    print(
-        f"[Record] Artifact threshold: "
-        f"{ARTIFACT_THRESHOLD_UV:.1f} uV = "
-        f"{ARTIFACT_THRESHOLD_UV * 1e-6:.2e} V"
-    )
+    # print("\n=== Unit Verification ===")
+    # print("[Record] MNE EEG unit: volts (V)")
+    # print(
+    #     f"[Record] Artifact threshold: "
+    #     f"{ARTIFACT_THRESHOLD_UV:.1f} uV = "
+    #     f"{ARTIFACT_THRESHOLD_UV * 1e-6:.2e} V"
+    # )
 
 
 def _count_artifact_rejections(
@@ -228,15 +231,15 @@ def preprocess_eeg(
         verbose=False,
     )
 
-    _print_event_counts(events, event_id)
+    # _print_event_counts(events, event_id)
 
     # After extracting events, keep physiological EEG only.
     raw_eeg = raw_copy.copy().pick(picks=EEG_CHANNELS)
 
-    # 3. Unit verification
+    #  Unit verification
     _verify_units(raw_eeg)
 
-    # 4. Filtering
+    # Filtering
     print("\n[3] Filtering pipeline...")
 
     if apply_notch:
@@ -255,6 +258,7 @@ def preprocess_eeg(
     # The project guide requires a 0.1-30 Hz band-pass.
     # We use a 4th-order Butterworth IIR filter with zero-phase operation
     # so the filter family/order are explicit and reproducible.
+
     raw_filtered = raw_eeg.filter(
         l_freq=L_FREQ,
         h_freq=H_FREQ,
@@ -271,6 +275,7 @@ def preprocess_eeg(
     print("[Record] Filter: 4th-order Butterworth IIR, zero-phase")
 
     # 5. Epoching + baseline correction + artifact rejection
+
     print(
         "\n[4] Epoching, baseline correction, "
         "and artifact rejection..."
@@ -356,36 +361,41 @@ def preprocess_eeg(
             "(output_path=None)."
         )
 
-    print("\nTask 3 preprocessing finished successfully.")
+    print("\n preprocessing finished successfully.")
     return epochs
 
 
-def load_bnci_subject(subject_id: int = 1) -> mne.io.BaseRaw:
-    """Load one BNCI2014-008 subject/run through MOABB."""
-    dataset = BNCI2014_008()
-    sessions = dataset.get_data(subjects=[subject_id])
-
-    session_id = next(iter(sessions[subject_id]))
-    run_id = next(iter(sessions[subject_id][session_id]))
-    raw = sessions[subject_id][session_id][run_id]
-
-    print("\n=== Dataset Sanity Check ===")
-    print(f"[Record] Subject: {subject_id}")
-    print(f"[Record] Session: {session_id}")
-    print(f"[Record] Run: {run_id}")
-    print(f"[Record] Sampling rate: {raw.info['sfreq']} Hz")
-    print(f"[Record] Channels: {raw.ch_names}")
-
-    return raw
+# def load_bnci_subject(subject_id: int = 1) -> mne.io.BaseRaw:
+#     """Load one BNCI2014-008 subject/run through MOABB."""
+#     dataset = BNCI2014_008()
+#     sessions = dataset.get_data(subjects=[subject_id])
+#
+#     session_id = next(iter(sessions[subject_id]))
+#     run_id = next(iter(sessions[subject_id][session_id]))
+#     raw = sessions[subject_id][session_id][run_id]
+#
+#     # print("\n=== Dataset Sanity Check ===")
+#     # print(f"[Record] Subject: {subject_id}")
+#     # print(f"[Record] Session: {session_id}")
+#     # print(f"[Record] Run: {run_id}")
+#     # print(f"[Record] Sampling rate: {raw.info['sfreq']} Hz")
+#     # print(f"[Record] Channels: {raw.ch_names}")
+#
+#     return raw
 
 
 if __name__ == "__main__":
     print("=== Task 3: BNCI2014-008 Preprocessing Test ===")
+    subject_id = 1
+    dataset,raw_test_data = load_bnci2014_008(subjects=[subject_id])
+    session_id = next(iter(raw_test_data[subject_id]))
+    run_id = next(iter(raw_test_data[subject_id][session_id]))
 
-    raw_test_data = load_bnci_subject(subject_id=1)
+    raw_test_data = raw_test_data[subject_id][session_id][run_id]
+
     final_epochs = preprocess_eeg(
         raw_test_data,
-        output_path=None,
+        output_path=Path.joinpath(PREPROCESSED_DATA_DIR,'subject_01_clean-epo.fif')
     )
 
-    print(f"\nFinal Epochs shape: {final_epochs.get_data().shape}")
+    # print(f"\nFinal Epochs shape: {final_epochs.get_data().shape}")

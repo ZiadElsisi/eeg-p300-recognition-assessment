@@ -14,9 +14,8 @@ from moabb.datasets import BNCI2014_008
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data" / "moabb"
 
-def load_bnci2014_008():
 
-    """Download and load the complete BNCI2014-008 dataset."""
+def load_bnci2014_008(subjects=None):
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -28,8 +27,12 @@ def load_bnci2014_008():
 
     dataset = BNCI2014_008()
 
+    if subjects is None:
+        subjects = dataset.subject_list
+
     data = dataset.get_data(
-        subjects=dataset.subject_list
+        subjects=subjects
     )
 
     return dataset, data
+
