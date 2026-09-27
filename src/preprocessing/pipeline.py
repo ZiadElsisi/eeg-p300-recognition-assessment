@@ -386,7 +386,7 @@ def preprocess_eeg(
 
 if __name__ == "__main__":
     print("=== Task 3: BNCI2014-008 Preprocessing Test ===")
-    subject_id = 1
+    subject_id = 2
     dataset,raw_test_data = load_bnci2014_008(subjects=[subject_id])
     session_id = next(iter(raw_test_data[subject_id]))
     run_id = next(iter(raw_test_data[subject_id][session_id]))
@@ -395,7 +395,7 @@ if __name__ == "__main__":
 
     final_epochs = preprocess_eeg(
         raw_test_data,
-        output_path=Path.joinpath(PREPROCESSED_DATA_DIR,'subject_01_clean-epo.fif')
+        output_path=Path.joinpath(PREPROCESSED_DATA_DIR,'subject_02_clean-epo.fif')
     )
 
     # print(f"\nFinal Epochs shape: {final_epochs.get_data().shape}")
