@@ -9,17 +9,7 @@ __pycache__/
 .venv/
 venv/
 
-# EEG datasets
-data/*
-!data/.gitkeep
 
-# Generated results
-results/*
-!results/.gitkeep
-
-# Generated figures
-figures/*
-!figures/.gitkeep
 
 # Jupyter
 .ipynb_checkpoints/

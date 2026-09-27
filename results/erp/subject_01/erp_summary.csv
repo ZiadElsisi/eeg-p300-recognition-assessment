@@ -1,0 +1,15 @@
+Metric,Value
+Subject,subject_01
+Target epoch count,700
+NonTarget epoch count,3500
+Selected channel,Pz
+Channel is Pz,True
+Target peak latency (ms),343.8
+Target peak amplitude (uV),1.314
+NonTarget peak latency (ms),343.8
+NonTarget peak amplitude (uV),0.672
+Target mean amplitude 300-500ms (uV),0.129
+NonTarget mean amplitude 300-500ms (uV),-0.009
+Target - NonTarget mean amplitude (uV),0.139
+Sanity check result,EXPECTED_PATTERN
+Diagnostic note,None - sanity check passed as expected.

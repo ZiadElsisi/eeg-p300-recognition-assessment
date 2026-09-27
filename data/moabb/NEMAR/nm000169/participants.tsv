@@ -1,0 +1,9 @@
+participant_id	age	sex	hand	weight	height	group	species	bci_experience
+sub-1	55	M	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-2	59	M	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-3	43	M	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-4	75	F	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-5	60	F	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-6	40	M	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-7	61	M	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive
+sub-8	72	F	n/a	n/a	n/a	amyotrophic lateral sclerosis	human	naive

@@ -1,0 +1,47 @@
+{
+  "Name": "BNCI 2014-008 P300 dataset (ALS patients)",
+  "BIDSVersion": "1.9.0",
+  "HEDVersion": "8.4.0",
+  "DatasetType": "derivative",
+  "License": "CC-BY-NC-ND-4.0",
+  "Authors": [
+    "Angela Riccio",
+    "Luca Simione",
+    "Francesca Schettini",
+    "Alessia Pizzimenti",
+    "Maurizio Inghilleri",
+    "Marta Olivetti Belardinelli",
+    "Donatella Mattia",
+    "Febo Cincotti"
+  ],
+  "Funding": [
+    "Italian Agency for Research on ALS-ARiSLA project 'Brindisys'",
+    "FARI project C26I12AJZZ at the Sapienza University of Rome"
+  ],
+  "EthicsApprovals": [
+    "Fondazione Santa Lucia ethic committee"
+  ],
+  "GeneratedBy": [
+    {
+      "CodeURL": "https://github.com/NeuroTechX/moabb",
+      "Name": "moabb",
+      "Description": "Mother of All BCI Benchmarks",
+      "Version": "1.5.0"
+    }
+  ],
+  "SourceDatasets": [
+    {
+      "DOI": "10.3389/fnhum.2013.00732"
+    }
+  ],
+  "Keywords": [
+    "brain computer interface",
+    "amyotrophic lateral sclerosis",
+    "P300",
+    "attention",
+    "working memory"
+  ],
+  "PublicationYear": 2013,
+  "DatasetDOI": "10.82901/nemar.nm000169",
+  "Version": "1.0.2"
+}
