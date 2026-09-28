@@ -362,6 +362,7 @@ def preprocess_eeg(
         )
 
     print("\n preprocessing finished successfully.")
+
     return epochs
 
 
@@ -385,17 +386,26 @@ def preprocess_eeg(
 
 
 if __name__ == "__main__":
-    print("=== Task 3: BNCI2014-008 Preprocessing Test ===")
-    subject_id = 2
-    dataset,raw_test_data = load_bnci2014_008(subjects=[subject_id])
-    session_id = next(iter(raw_test_data[subject_id]))
-    run_id = next(iter(raw_test_data[subject_id][session_id]))
+    print("=== Step 3: BNCI2014-008 Preprocessing Test ===")
+    # Apply the pipeline for each subject
 
-    raw_test_data = raw_test_data[subject_id][session_id][run_id]
+    subjects = range(1, 9)  # BNCI2014-008 has subjects 1-8
 
-    final_epochs = preprocess_eeg(
-        raw_test_data,
-        output_path=Path.joinpath(PREPROCESSED_DATA_DIR,'subject_02_clean-epo.fif')
-    )
+    for subject_id in subjects:
+        dataset, raw_data = load_bnci2014_008(subjects=[subject_id])
+
+        session_id = next(iter(raw_data[subject_id]))
+        run_id = next(iter(raw_data[subject_id][session_id]))
+
+        raw = raw_data[subject_id][session_id][run_id]
+
+        epochs = preprocess_eeg(raw,
+                                output_path=Path.joinpath(PREPROCESSED_DATA_DIR, f'subject_{subject_id}_clean-epo.fif')
+                                )
+
+        print(
+            f"Subject {subject_id:02d}: "
+            f"{len(epochs)} epochs"
+        )
 
     # print(f"\nFinal Epochs shape: {final_epochs.get_data().shape}")
