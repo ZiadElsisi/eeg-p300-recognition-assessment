@@ -7,11 +7,9 @@ from src.loaders.bnci2014_008 import load_bnci2014_008
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PREPROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "preprocessed"
-
 # The artifact threshold is configurable because the guide says to use the
 # "planned amplitude rule", but it does not define the numeric threshold.
 EVENT_CHANNEL = "Target stim"
-
 # BNCI2014-008 class codes in the MOABB loader:
 #   1 -> NonTarget
 #   2 -> Target
@@ -384,18 +382,18 @@ def preprocess_eeg(
 #     return raw
 
 
-if __name__ == "__main__":
-    print("=== Task 3: BNCI2014-008 Preprocessing Test ===")
-    subject_id = 2
-    dataset,raw_test_data = load_bnci2014_008(subjects=[subject_id])
-    session_id = next(iter(raw_test_data[subject_id]))
-    run_id = next(iter(raw_test_data[subject_id][session_id]))
-
-    raw_test_data = raw_test_data[subject_id][session_id][run_id]
-
-    final_epochs = preprocess_eeg(
-        raw_test_data,
-        output_path=Path.joinpath(PREPROCESSED_DATA_DIR,'subject_02_clean-epo.fif')
-    )
+# if __name__ == "__main__":
+#     print("=== Task 3: BNCI2014-008 Preprocessing Test ===")
+#     subject_id = 2
+#     dataset,raw_test_data = load_bnci2014_008(subjects=[subject_id])
+#     session_id = next(iter(raw_test_data[subject_id]))
+#     run_id = next(iter(raw_test_data[subject_id][session_id]))
+#
+#     raw_test_data = raw_test_data[subject_id][session_id][run_id]
+#
+#     final_epochs = preprocess_eeg(
+#         raw_test_data,
+#         output_path=Path.joinpath(PREPROCESSED_DATA_DIR,'subject_02_clean-epo.fif')
+#     )
 
     # print(f"\nFinal Epochs shape: {final_epochs.get_data().shape}")
