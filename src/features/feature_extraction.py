@@ -111,11 +111,15 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
                 f"Expected {N_CHANNELS} channels, "
                 f"but received {len(epochs.ch_names)}."
             )
+        #cropping the time samples
         start=CROPPING_WINDOW[0]
         end=CROPPING_WINDOW[1]
         shorter_epochs = epochs.copy().crop(tmin=round(start/1000,1), tmax=round(end/1000,1), include_tmax=True)
+        # number of time samples after cropping
+        print("number of time samples before and after cropping the time of epochs:")
         for name, obj in dict(Original=epochs, Cropped=shorter_epochs).items():
             print(f"{name} epochs has {obj.get_data(copy=False).shape[-1]} time samples")
+        print("\n")
         # construct the windows
         feature_windows = [
             [x,min(x+WINDOW_RANGE,end)]
@@ -128,6 +132,7 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
         # transform to tuples
         feature_windows = [(x, y) for x, y in feature_windows]
         print(f"feature windows: {feature_windows}")
+        print("\n")
         # creating the window averages pipeline
         epochs_windows_channel_means = [] #every epoch consists of 8 channels every channel has n windows
         for x, y in feature_windows:
@@ -144,9 +149,11 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
             for ch in range(1, N_CHANNELS + 1)
         ]
         print(column_names)
+        print("\n")
         data_2d = data_2d * 1e6
         features = pd.DataFrame(data_2d, columns=column_names)
-        print(features)
+        print(f"feature shape: {features.shape}")
+        print("\n")
         return features
     except ValueError as e:
         print(e)
@@ -154,9 +161,7 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
 def target_extraction(epochs:mne.Epochs)->pd.DataFrame:
     target_labels=epochs.events[:,-1]
     return pd.DataFrame(target_labels,columns=["target"])
-epochs=get_and_inspect_epochs()
-print(feature_extraction(epochs).shape)
-print(target_extraction(epochs).shape)
+
 
 
 

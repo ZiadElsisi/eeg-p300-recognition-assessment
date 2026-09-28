@@ -18,15 +18,14 @@ labels={
     "target":2,
     "nontarget":1
 }
-
-epochs=ext.get_and_inspect_epochs()
-features=ext.feature_extraction(epochs)
-print(features)
-target=ext.target_extraction(epochs)
 def lda_pipeline(features,target):
     pipe=Pipeline([("scaler",StandardScaler()),
                   ("classifier",LDA(priors=[0.5,0.5]))
                    ])
+    num_of_targets=(target["target"]==2).sum()
+    print(f"number of target samples: {num_of_targets}")
+    print(f"number of non target samples: {len(target)-num_of_targets}")
+    print("\n")
     x_train,x_test,y_train,y_test=train_test_split(features,target,test_size=TEST_SIZE,random_state=SEED,stratify=target) #split based on the population real distribution where the non target is the majority
     # save train,test indices
     indices={
@@ -67,5 +66,8 @@ def evaluation_report(y_true,y_pred,y_pred_prob):
     plt.close()
     print(classification_report(y_true,y_pred))
 
-
-lda_pipeline(features,target)
+if __name__ == "__main__":
+    epochs = ext.get_and_inspect_epochs()
+    features = ext.feature_extraction(epochs)
+    target = ext.target_extraction(epochs)
+    lda_pipeline(features,target)
