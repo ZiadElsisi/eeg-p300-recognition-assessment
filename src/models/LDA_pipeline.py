@@ -26,7 +26,9 @@ def lda_pipeline(features,target):
     print(f"number of target samples: {num_of_targets}")
     print(f"number of non target samples: {len(target)-num_of_targets}")
     print("\n")
-    x_train,x_test,y_train,y_test=train_test_split(features,target,test_size=TEST_SIZE,random_state=SEED,stratify=target) #split based on the population real distribution where the non target is the majority
+    # 1d array is expected so we convert to 1d series
+    y = target["target"]
+    x_train,x_test,y_train,y_test=train_test_split(features,y,test_size=TEST_SIZE,random_state=SEED,stratify=target) #split based on the population real distribution where the non target is the majority
     # save train,test indices
     indices={
         "train_idx":x_train.index.tolist(),
@@ -38,15 +40,18 @@ def lda_pipeline(features,target):
     pipe.fit(x_train,y_train)
     # get predictions
     # as probabilities (how confident are we that the sample is target)
-    predictions_prob=pipe.predict_proba(x_test)[:,1]
+    target_column = np.where(
+        pipe.classes_ == labels["target"]
+    )[0][0]
+    predictions_prob=pipe.predict_proba(x_test)[:,target_column]
     # as labels
-    prediction=np.where(predictions_prob>0.5,2,1)
+    prediction=pipe.predict(x_test)
     evaluation_report(y_test,prediction,predictions_prob)
 def evaluation_report(y_true,y_pred,y_pred_prob):
     print(f"accuracy: {accuracy_score(y_true,y_pred)}")
-    print(f"precision: {precision_score(y_true,y_pred)}")
-    print(f"recall: {recall_score(y_true,y_pred)}")
-    print(f"f1 score: {f1_score(y_true,y_pred)}")
+    print(f"precision: {precision_score(y_true,y_pred,pos_label=2)}")
+    print(f"recall: {recall_score(y_true,y_pred,pos_label=2)}")
+    print(f"f1 score: {f1_score(y_true,y_pred,pos_label=2)}")
     cf=confusion_matrix(y_true,y_pred)
     disp=ConfusionMatrixDisplay(confusion_matrix=cf,display_labels=['not target','target'])
     auc = roc_auc_score(y_true, y_pred_prob)
@@ -64,7 +69,7 @@ def evaluation_report(y_true,y_pred,y_pred_prob):
     plt.legend()
     plt.savefig(PROJECT_ROOT/"figures"/"evaluation"/"ROC_curve.png")
     plt.close()
-    print(classification_report(y_true,y_pred))
+    print(classification_report(y_true,y_pred,target_names=['Non Target','Target']))
 
 if __name__ == "__main__":
     epochs = ext.get_and_inspect_epochs()
