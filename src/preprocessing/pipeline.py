@@ -7,11 +7,9 @@ from src.loaders.bnci2014_008 import load_bnci2014_008
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PREPROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "preprocessed"
-
 # The artifact threshold is configurable because the guide says to use the
 # "planned amplitude rule", but it does not define the numeric threshold.
 EVENT_CHANNEL = "Target stim"
-
 # BNCI2014-008 class codes in the MOABB loader:
 #   1 -> NonTarget
 #   2 -> Target
