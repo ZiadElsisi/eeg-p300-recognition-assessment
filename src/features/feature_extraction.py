@@ -44,7 +44,7 @@ def get_subject_raw_data(subject_id:int=SUBJECT_ID,session_id:int|None=None,run_
     raw_data = raw_test_data[subject_id][session_id][run_id]
     return raw_data
 
-def get_and_inspect_epochs(raw_data:mne.io.RawArray=get_subject_raw_data(),file_name:str|None=None):
+def get_and_inspect_epochs(raw_data: mne.io.RawArray | None = None,file_name: str | None = None):
     """
         Preprocess raw EEG data into clean epochs, optionally save them to disk,
         print key dataset inspection metrics, and return the resulting epochs object.
@@ -68,6 +68,9 @@ def get_and_inspect_epochs(raw_data:mne.io.RawArray=get_subject_raw_data(),file_
         final_epochs : mne.Epochs
             The cleaned, trial-segmented MNE Epochs object ready for feature extraction and modeling.
         """
+    if raw_data is None:
+        raw_data = get_subject_raw_data()
+
     print("== start preprocessing ==")
     if file_name:
         final_epochs = preprocess_eeg(
