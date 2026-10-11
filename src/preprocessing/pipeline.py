@@ -207,7 +207,7 @@ def preprocess_eeg(
 
     # We keep the event channel for event extraction, but we will remove
     # it before filtering/epoching so the final Epochs object contains EEG
-    # only. This also keeps stimulus codes out of ERP amplitude checks.
+    # only. This also keeps stimulus codes out of ERP Analysis amplitude checks.
     raw_copy.pick(picks=EEG_CHANNELS + [event_channel])
 
     print(f"[Record] EEG channels ({len(EEG_CHANNELS)}): {EEG_CHANNELS}")

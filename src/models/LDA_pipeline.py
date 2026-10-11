@@ -8,8 +8,8 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import numpy as np
-import features.feature_extraction as ext
-from preprocessing.pipeline import PROJECT_ROOT
+import src.features.feature_extraction as ext
+from src.preprocessing.pipeline import PROJECT_ROOT
 #----------- Fix a Seed number -----------
 SEED=42
 TEST_SIZE=0.2

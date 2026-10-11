@@ -1,13 +1,13 @@
 import mne
 import numpy as np
 import pandas as pd
-from preprocessing.pipeline import preprocess_eeg,PREPROCESSED_DATA_DIR
-from loaders.bnci2014_008 import load_bnci2014_008
+from src.preprocessing.pipeline import preprocess_eeg,PREPROCESSED_DATA_DIR
+from src.loaders.bnci2014_008 import load_bnci2014_008
 from pathlib import Path
 
 
 #----------- try on a specific subject -----------
-SUBJECT_ID= 2
+SUBJECT_ID= 8
 #----------- feature selection parameters -----------
 # Time in Milliseconds
 CROPPING_WINDOW=[0,800]
