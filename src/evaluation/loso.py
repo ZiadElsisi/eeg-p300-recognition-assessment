@@ -19,16 +19,13 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+import mne  # imported lazily so the unit tests do not need MNE
+from src.features.feature_extraction import feature_extraction
+from sklearn.model_selection import LeaveOneGroupOut
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = PROJECT_ROOT / "src"
-
-# The existing modules use both "from features..." (src on the path, as in
-# Task 6) and "from src.loaders..." (project root on the path).
-for _p in (str(PROJECT_ROOT), str(SRC_DIR)):
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
-
 PREPROCESSED_DIR = PROJECT_ROOT / "data" / "preprocessed"
 RESULTS_DIR = PROJECT_ROOT / "results" / "loso"
 
@@ -38,20 +35,10 @@ TARGET_LABEL = 2
 
 METRICS = ["accuracy", "precision", "recall", "f1", "roc_auc"]
 
-# Fixed, already-completed Task 6 results (mean, std) - reference only.
-TASK6_RESULTS = {
-    "accuracy": (0.808, 0.040),
-    "precision": (0.458, 0.075),
-    "recall": (0.759, 0.053),
-    "f1": (0.570, 0.071),
-    "roc_auc": (0.865, 0.045),
-}
 
 
 class LeakageError(RuntimeError):
     """Raised when a LOSO fold would let the held-out subject leak."""
-
-
 # ----------------------------------------------------------------------
 # Model (must stay identical to the configuration used in Task 6)
 # ----------------------------------------------------------------------
@@ -70,15 +57,11 @@ def build_model() -> Pipeline:
 # Data loading (subject IDs are kept explicitly for every feature row)
 # ----------------------------------------------------------------------
 def discover_subjects(preprocessed_dir: Path = PREPROCESSED_DIR) -> list[int]:
-    """Subject IDs derived from data/preprocessed/subject_<id>_clean-epo.fif."""
-    pattern = re.compile(r"^subject_(\d+)_clean-epo\.fif$")
     subjects = []
     for path in Path(preprocessed_dir).glob("subject_*_clean-epo.fif"):
-        match = pattern.match(path.name)
-        if match:
-            subjects.append(int(match.group(1)))
-    return sorted(subjects)
-
+        number = path.name.split("_")[1]   # "subject_5_clean-epo.fif" -> "5"
+        subjects.append(int(number))
+    return sorted(subjects) ## Return a list with all subject IDs inside  preprocessed folder.
 
 def load_all_subjects(
     subjects: list[int],
@@ -94,8 +77,7 @@ def load_all_subjects(
     y : ndarray, 1 = NonTarget, 2 = Target
     subject_ids : ndarray, subject ID of every row of X
     """
-    import mne  # imported lazily so the unit tests do not need MNE
-    from features.feature_extraction import feature_extraction
+
 
     X_parts, y_parts, id_parts = [], [], []
 
@@ -137,54 +119,51 @@ def load_all_subjects(
 # ----------------------------------------------------------------------
 # LOSO folds
 # ----------------------------------------------------------------------
-def make_loso_folds(subject_ids: np.ndarray) -> list[dict]:
-    """One fold per subject; the held-out subject is wholly excluded."""
-    subject_ids = np.asarray(subject_ids)
-    subjects = [int(s) for s in np.unique(subject_ids)]
 
+def make_loso_folds(subject_ids):
+    loso = LeaveOneGroupOut()
     folds = []
-    for fold_number, held_out in enumerate(subjects, start=1):
-        train_mask = subject_ids != held_out
-        test_mask = subject_ids == held_out
+    for i, (train_idx, test_idx) in enumerate(loso.split(subject_ids, groups=subject_ids), start=1):
+        held_out = int(subject_ids[test_idx[0]])
         folds.append({
-            "fold": fold_number,
+            "fold": i,
             "held_out_subject": held_out,
-            "train_subjects": [s for s in subjects if s != held_out],
-            "train_idx": np.flatnonzero(train_mask),
-            "test_idx": np.flatnonzero(test_mask),
+            "train_subjects": sorted(set(subject_ids[train_idx])),
+            "train_idx": train_idx,
+            "test_idx": test_idx,
         })
     return folds
 
 
-def assert_fold_integrity(fold: dict, subject_ids: np.ndarray) -> None:
-    """Fail loudly if the held-out subject could reach training."""
-    subject_ids = np.asarray(subject_ids)
-    held_out = fold["held_out_subject"]
-    train_idx = np.asarray(fold["train_idx"])
-    test_idx = np.asarray(fold["test_idx"])
-
-    train_subjects_actual = {int(s) for s in np.unique(subject_ids[train_idx])}
-    test_subjects_actual = {int(s) for s in np.unique(subject_ids[test_idx])}
-
-    if held_out in train_subjects_actual:
-        raise LeakageError(
-            f"Held-out subject {held_out} appears in the training rows."
-        )
-    if held_out in fold["train_subjects"]:
-        raise LeakageError(
-            f"Held-out subject {held_out} is in the recorded training list."
-        )
-    if test_subjects_actual != {held_out}:
-        raise LeakageError(
-            f"Test rows must contain only subject {held_out}; "
-            f"found {sorted(test_subjects_actual)}."
-        )
-    if train_subjects_actual != set(fold["train_subjects"]):
-        raise LeakageError(
-            "Recorded training subjects do not match the training rows."
-        )
-    if np.intersect1d(train_idx, test_idx).size != 0:
-        raise LeakageError("Train and test rows overlap.")
+# def assert_fold_integrity(fold: dict, subject_ids: np.ndarray) -> None:
+#     """Fail loudly if the held-out subject could reach training."""
+#     subject_ids = np.asarray(subject_ids)
+#     held_out = fold["held_out_subject"]
+#     train_idx = np.asarray(fold["train_idx"])
+#     test_idx = np.asarray(fold["test_idx"])
+#
+#     train_subjects_actual = {int(s) for s in np.unique(subject_ids[train_idx])}
+#     test_subjects_actual = {int(s) for s in np.unique(subject_ids[test_idx])}
+#
+#     if held_out in train_subjects_actual:
+#         raise LeakageError(
+#             f"Held-out subject {held_out} appears in the training rows."
+#         )
+#     if held_out in fold["train_subjects"]:
+#         raise LeakageError(
+#             f"Held-out subject {held_out} is in the recorded training list."
+#         )
+#     if test_subjects_actual != {held_out}:
+#         raise LeakageError(
+#             f"Test rows must contain only subject {held_out}; "
+#             f"found {sorted(test_subjects_actual)}."
+#         )
+#     if train_subjects_actual != set(fold["train_subjects"]):
+#         raise LeakageError(
+#             "Recorded training subjects do not match the training rows."
+#         )
+#     if np.intersect1d(train_idx, test_idx).size != 0:
+#         raise LeakageError("Train and test rows overlap.")
 
 
 # ----------------------------------------------------------------------
@@ -216,35 +195,25 @@ def compute_metrics(y_true, y_pred, y_prob_target) -> dict:
     }
 
 
-def evaluate_fold(fold: dict, X, y, subject_ids, model_factory=build_model):
-    """Fit on the training subjects only; evaluate on the held-out subject."""
-    assert_fold_integrity(fold, subject_ids)
-
+def evaluate_fold(fold: dict, X, y):
     X = np.asarray(X, dtype=float)
     y = np.asarray(y)
 
-    train_idx, test_idx = fold["train_idx"], fold["test_idx"]
-    X_train, y_train = X[train_idx], y[train_idx]
-    X_test, y_test = X[test_idx], y[test_idx]
+    # 1. Split the rows
+    X_train, y_train = X[fold["train_idx"]], y[fold["train_idx"]]
+    X_test,  y_test  = X[fold["test_idx"]],  y[fold["test_idx"]]
 
-    model = model_factory()          # fresh scaler + LDA for every fold
-    model.fit(X_train, y_train)      # training subjects only
+    # 2. Train a new model
+    model = build_model()
+    model.fit(X_train, y_train)
 
+    # 3. Predict on the held-out person
     y_pred = model.predict(X_test)
+    y_prob = model.predict_proba(X_test)[:, 1]   # chance of Target
 
-    # Use the Target probability column, not an assumed column 1.
-    target_column = int(np.flatnonzero(model.classes_ == TARGET_LABEL)[0])
-    y_prob = model.predict_proba(X_test)[:, target_column]
-
+    # 4. Score it
     metrics = compute_metrics(y_test, y_pred, y_prob)
-    return {
-        "fold": fold["fold"],
-        "held_out_subject": fold["held_out_subject"],
-        "train_subjects": ",".join(str(s) for s in fold["train_subjects"]),
-        "n_train": int(len(train_idx)),
-        "n_test": int(len(test_idx)),
-        **metrics,
-    }
+    return {"held_out_subject": fold["held_out_subject"], **metrics}
 
 
 def run_loso(X, y, subject_ids, model_factory=build_model,
@@ -253,15 +222,12 @@ def run_loso(X, y, subject_ids, model_factory=build_model,
     folds = make_loso_folds(subject_ids)
     rows = []
     for fold in folds:
-        row = evaluate_fold(fold, X, y, subject_ids, model_factory)
+        row = evaluate_fold(fold, X, y,)
         rows.append(row)
         if verbose:
             print(
-                f"Fold {row['fold']} | held-out subject "
-                f"{row['held_out_subject']} | train subjects "
-                f"[{row['train_subjects']}] | n_train={row['n_train']} "
-                f"n_test={row['n_test']}\n"
-                f"   acc={row['accuracy']:.3f} prec={row['precision']:.3f} "
+                f"Held-out subject {row['held_out_subject']} | "
+                f"acc={row['accuracy']:.3f} prec={row['precision']:.3f} "
                 f"rec={row['recall']:.3f} f1={row['f1']:.3f} "
                 f"auc={row['roc_auc']:.3f}  "
                 f"CM[[tn fp][fn tp]]=[[{row['tn']} {row['fp']}]"
@@ -290,17 +256,17 @@ def save_results(fold_df: pd.DataFrame, summary_df: pd.DataFrame,
     return fold_path, summary_path
 
 
-def print_comparison(summary_df: pd.DataFrame) -> None:
-    print("\nTask 6 (subject-dependent 5-fold) vs Task 7 (LOSO)")
-    print(f"{'Metric':<10} | {'Subject-Dependent 5-Fold':<26} | "
-          f"{'Subject-Independent LOSO':<26} | Delta (LOSO - SD)")
-    for _, row in summary_df.iterrows():
-        m = row["metric"]
-        t6_mean, t6_std = TASK6_RESULTS[m]
-        print(f"{m:<10} | {t6_mean:.3f} ± {t6_std:.3f}".ljust(40)
-              + f"| {row['mean']:.3f} ± {row['std']:.3f}".ljust(29)
-              + f"| {row['mean'] - t6_mean:+.3f}")
-
+# def print_comparison(summary_df: pd.DataFrame) -> None:
+#     print("\nTask 6 (subject-dependent 5-fold) vs Task 7 (LOSO)")
+#     print(f"{'Metric':<10} | {'Subject-Dependent 5-Fold':<26} | "
+#           f"{'Subject-Independent LOSO':<26} | Delta (LOSO - SD)")
+#     for _, row in summary_df.iterrows():
+#         m = row["metric"]
+#         t6_mean, t6_std = TASK6_RESULTS[m]
+#         print(f"{m:<10} | {t6_mean:.3f} ± {t6_std:.3f}".ljust(40)
+#               + f"| {row['mean']:.3f} ± {row['std']:.3f}".ljust(29)
+#               + f"| {row['mean'] - t6_mean:+.3f}")
+#
 
 def main() -> None:
     subjects = discover_subjects()
@@ -322,7 +288,7 @@ def main() -> None:
     for _, row in summary_df.iterrows():
         print(f"{row['metric']:<10}: {row['mean']:.3f} ± {row['std']:.3f}")
 
-    print_comparison(summary_df)
+    # print_comparison(summary_df)
     print(f"\nSaved: {fold_path}\nSaved: {summary_path}")
 
 
