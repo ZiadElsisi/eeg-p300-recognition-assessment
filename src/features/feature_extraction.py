@@ -1,6 +1,8 @@
 import mne
 import numpy as np
 import pandas as pd
+from narwhals import Boolean
+
 from src.preprocessing.pipeline import preprocess_eeg,PREPROCESSED_DATA_DIR
 from src.loaders.bnci2014_008 import load_bnci2014_008
 from pathlib import Path
@@ -44,7 +46,7 @@ def get_subject_raw_data(subject_id:int=SUBJECT_ID,session_id:int|None=None,run_
     raw_data = raw_test_data[subject_id][session_id][run_id]
     return raw_data
 
-def get_and_inspect_epochs(raw_data: mne.io.RawArray | None = None,file_name: str | None = None):
+def get_and_inspect_preprocessed_epochs(raw_data: mne.io.RawArray | None = None,file_name: str | None = None,verbose:bool=False)->pd.DataFrame:
     """
         Preprocess raw EEG data into clean epochs, optionally save them to disk,
         print key dataset inspection metrics, and return the resulting epochs object.
@@ -80,19 +82,21 @@ def get_and_inspect_epochs(raw_data: mne.io.RawArray | None = None,file_name: st
     else:
         final_epochs = preprocess_eeg(
             raw_data)
-    print("\n")
-    x = final_epochs.get_data()
-    y = final_epochs.events[:, -1]
-    print("== pre feature selection Epochs inspection ==")
-    print("EEG shape:", x.shape)
-    print("Labels shape:", y.shape)
-    print("Channels:", final_epochs.ch_names)
-    print("Sampling frequency:", final_epochs.info["sfreq"])
-    print("Event mapping:", final_epochs.event_id)
-    print("\n")
+    print("== end preprocessing ==")
+    if verbose:
+        print("\n")
+        x = final_epochs.get_data()
+        y = final_epochs.events[:, -1]
+        print("== pre feature selection Epochs inspection ==")
+        print("EEG shape:", x.shape)
+        print("Labels shape:", y.shape)
+        print("Channels:", final_epochs.ch_names)
+        print("Sampling frequency:", final_epochs.info["sfreq"])
+        print("Event mapping:", final_epochs.event_id)
+        # print("\n")
     return final_epochs
 
-def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
+def feature_extraction(epochs:mne.Epochs,verbose:bool=False)->pd.DataFrame:
     try:
         # Validate configuration
         if len(CROPPING_WINDOW) != 2:
@@ -118,11 +122,6 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
         start=CROPPING_WINDOW[0]
         end=CROPPING_WINDOW[1]
         shorter_epochs = epochs.copy().crop(tmin=round(start/1000,1), tmax=round(end/1000,1), include_tmax=True)
-        # number of time samples after cropping
-        print("number of time samples before and after cropping the time of epochs:")
-        for name, obj in dict(Original=epochs, Cropped=shorter_epochs).items():
-            print(f"{name} epochs has {obj.get_data(copy=False).shape[-1]} time samples")
-        print("\n")
         # construct the windows
         feature_windows = [
             [x,min(x+WINDOW_RANGE,end)]
@@ -134,8 +133,6 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
             feature_windows[-1][-1] = feature_windows[-1][-1] + 1
         # transform to tuples
         feature_windows = [(x, y) for x, y in feature_windows]
-        print(f"feature windows: {feature_windows}")
-        print("\n")
         # creating the window averages pipeline
         epochs_windows_channel_means = [] #every epoch consists of 8 channels every channel has n windows
         for x, y in feature_windows:
@@ -143,7 +140,7 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
             end_idx=round((y-start)*S_Freq/1000)
             data=shorter_epochs.get_data()
             epoch_window = data[:,:,start_idx:end_idx]
-            epochs_windows_channel_means.append(epoch_window.mean(axis=2)) #epochs where every epoch consists of 8 channels every channel has 1 value (average of the window)
+            epochs_windows_channel_means.append(epoch_window.mean(axis=2)) #epochs where every epoch consists of 8 channels every channel has 1 value (average of the window), By default, NumPy removes the averaged dimension, so the shape changes from 3D to 2D
         data_2d = np.concatenate(epochs_windows_channel_means, axis=1)
         # construct the data frame
         column_names = [
@@ -151,12 +148,17 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
             for w in range(1, len(feature_windows) + 1)
             for ch in range(1, N_CHANNELS + 1)
         ]
-        print(column_names)
-        print("\n")
         data_2d = data_2d * 1e6
         features = pd.DataFrame(data_2d, columns=column_names)
-        print(f"feature shape: {features.shape}")
-        print("\n")
+        if verbose:
+            print("number of time samples before and after cropping the time of epochs:")
+            for name, obj in dict(Original=epochs, Cropped=shorter_epochs).items():
+                print(f"{name} epochs has {obj.get_data(copy=False).shape[-1]} time samples")
+            print("\n")
+            print(f"feature windows: {feature_windows}")
+            print("\n")
+            print(f"feature shape: {features.shape}")
+            print("\n")
         return features
     except ValueError as e:
         print(e)
@@ -164,6 +166,24 @@ def feature_extraction(epochs:mne.Epochs)->pd.DataFrame:
 def target_extraction(epochs:mne.Epochs)->pd.DataFrame:
     target_labels=epochs.events[:,-1]
     return pd.DataFrame(target_labels,columns=["target"])
+def create_data_set(dataFrames:dict[str,dict[str,pd.DataFrame]],verbose:bool=False)->tuple[pd.DataFrame,pd.DataFrame]:
+    data_frames=[]
+    for idx,data_frame in  dataFrames.items():
+        feature_copy=data_frame['features'].copy()
+        label_copy=data_frame['label'].copy()
+
+        subject_id=[f'subj_{idx}' for _ in range(feature_copy.shape[0])]
+
+        feature_copy.insert(0,"subject_id",subject_id)
+
+        data_frames.append(pd.concat([feature_copy,label_copy],axis=1,sort=False))
+
+    dataset=pd.concat(data_frames,sort=False)
+    target=pd.DataFrame(dataset["target"],columns=["target"])
+    features=dataset.drop(columns=["target"])
+    if verbose:
+        print(dataset.head())
+    return features,target
 
 
 

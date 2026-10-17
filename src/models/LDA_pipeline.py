@@ -1,13 +1,12 @@
 import json
-from pathlib import Path
-
+import mne
 import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, confusion_matrix,
-                             ConfusionMatrixDisplay, roc_curve, roc_auc_score,classification_report)
+                             ConfusionMatrixDisplay, roc_curve, roc_auc_score,classification_report,auc,precision_recall_curve)
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -16,20 +15,23 @@ from src.preprocessing.pipeline import PROJECT_ROOT
 #----------- Fix a Seed number -----------
 SEED=42
 TEST_SIZE=0.2
+EVALUATION_RESULTS_DIR = PROJECT_ROOT/"results"/"lda_holdout_evaluation"
 #----------- target/non target labels -----------
 labels={
     "target":2,
     "nontarget":1
 }
-def lda_pipeline_holdout_evaluation(features,target):
+
+def lda_pipeline_holdout_evaluation(features:pd.DataFrame,target:pd.DataFrame | pd.Series,selected_subjects:dict[str,int]={},verbose:bool=False):
 
     #------------------------------------------------
     # Report number of Target/NonTarget
     # ------------------------------------------------
-    # num_of_targets = (target["target"] == 2).sum()
-    # print(f"number of target samples: {num_of_targets}")
-    # print(f"number of non target samples: {len(target) - num_of_targets}")
-    # print("\n")
+    if verbose:
+        num_of_targets = (target["target"] == 2).sum()
+        print(f"number of target samples: {num_of_targets}")
+        print(f"number of non target samples: {len(target) - num_of_targets}")
+        print("\n")
 
     #------------------------------------------------
     # Fixed splitting
@@ -37,7 +39,7 @@ def lda_pipeline_holdout_evaluation(features,target):
     # 1d array is expected so we convert to 1d series
     y = target["target"]
     x = features.copy()
-    x.drop(columns=["epoch_id"],inplace=True)
+    x.drop(columns=["subject_id"],inplace=True)
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=TEST_SIZE, random_state=SEED,stratify=target)  # split based on the population real distribution where the non target is the majority
     # save train,test indices
@@ -45,8 +47,10 @@ def lda_pipeline_holdout_evaluation(features,target):
         "train_idx":x_train.index.tolist(),
         "test_idx":x_test.index.tolist()
     }
-    with open(PROJECT_ROOT/"data"/"train_test_split.json",'w') as file:
-        json.dump(indices,file)
+
+    EVALUATION_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(PROJECT_ROOT/"results"/"lda_holdout_evaluation"/"train_test_split.json",'w') as file:
+        json.dump(indices,file,indent=4)
     #------------------------------------------------
     # Create Pipeline
     # ------------------------------------------------
@@ -74,66 +78,88 @@ def lda_pipeline_holdout_evaluation(features,target):
     #------------------------------------------------
     # Holdout Evaluation
     # ------------------------------------------------
-    evaluation_report(y_test,prediction,predictions_prob)
+    evaluation_report(y_test,prediction,predictions_prob,selected_subjects)
     return prediction,predictions_prob
 
-def evaluation_report(y_true,y_pred,y_pred_prob):
-    output_dir = PROJECT_ROOT / "figures" / "hold_out_evaluation"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    print(f"accuracy: {round(accuracy_score(y_true,y_pred),2)}")
-    print(f"precision: {round(precision_score(y_true,y_pred,pos_label=2),2)}")
-    print(f"recall: {round(recall_score(y_true,y_pred,pos_label=2),2)}")
-    print(f"f1 score: {round(f1_score(y_true,y_pred,pos_label=2),2)}")
+def evaluation_report(y_true,y_pred,y_pred_prob,selected_subjects:dict[str,int]={}):
+    evaluation_figures_dir = PROJECT_ROOT / "figures" / "hold_out_evaluation"
+    evaluation_figures_dir.mkdir(parents=True, exist_ok=True)
+    #------------------------------------------------
+    # PR-Auc curve
+    # ------------------------------------------------
+    pr_precision,pr_recall,pr_thresholds= precision_recall_curve(y_true,y_pred_prob,pos_label=labels["target"])
+    pr_auc=round(auc(pr_recall,pr_precision), 2)
+    plt.plot(pr_recall,pr_precision,label=f"AUC = {pr_auc}")
+    baseline=(y_true==2).sum()/y_true.shape[0]
+    plt.axhline(y=baseline, linestyle='--', color='gray',label="Baseline")
+    plt.xlabel("Recall")#
+    plt.ylabel("Precision")
+    plt.title("Precision-Recall Curve")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(PROJECT_ROOT/"figures"/"hold_out_evaluation"/"PR_AUC_curve.png")
+    plt.close()
+    #------------------------------------------------
+    # EVALUATION DATA FRAME
+    # ------------------------------------------------
+    metrices={
+    "accuracy" : round(accuracy_score(y_true, y_pred), 2),
+    "precision" : round(precision_score(y_true, y_pred, pos_label=2), 2),
+    "recall" : round(recall_score(y_true, y_pred, pos_label=2), 2),
+    "f1_score" : round(f1_score(y_true, y_pred, pos_label=2), 2),
+    "roc_auc" : round(roc_auc_score(y_true, y_pred_prob), 2),
+    "pr_auc": pr_auc,
+    }
+    evaluation_df = pd.DataFrame.from_dict([selected_subjects | metrices])
+    evaluation_df.to_csv(EVALUATION_RESULTS_DIR/"holdout_evaluation_selected_subjects_metrices.csv")
+    #------------------------------------------------
+    # Confusion Matrix
+    # ------------------------------------------------
     cf=confusion_matrix(y_true,y_pred)
     disp=ConfusionMatrixDisplay(confusion_matrix=cf,display_labels=['not target','target'])
-    auc = roc_auc_score(y_true, y_pred_prob)
     disp.plot()
     plt.title("CONFUSION MATRIX")
     plt.savefig(PROJECT_ROOT/"figures"/"hold_out_evaluation"/"confusion_matrix.png")
     plt.close()
-    print("ROC-AUC:", round(auc,2))
+    #------------------------------------------------
+    # Roc-Auc curve
+    # ------------------------------------------------
     fpr, tpr, thresholds = roc_curve(y_true, y_pred_prob, pos_label=labels["target"])
-    plt.plot(fpr, tpr, label=f"AUC = {auc:.3f}")
+    plt.plot(fpr, tpr, label=f"AUC = {metrices['roc_auc']}")
     plt.plot([0, 1], [0, 1], linestyle='--', color='gray', label="Chance")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate (Recall)")
     plt.title("ROC Curve — Target vs NonTarget")
     plt.legend()
+    plt.grid(True)
     plt.savefig(PROJECT_ROOT/"figures"/"hold_out_evaluation"/"ROC_curve.png")
     plt.close()
+
+
+
     print(classification_report(y_true,y_pred,target_names=['Non Target','Target']))
-def create_data_set(dataFrames:dict[str,dict[str,pd.DataFrame]])->tuple[pd.DataFrame,pd.DataFrame]:
-    data_frames=[]
-    for idx,data_frame in  dataFrames.items():
-        feature_copy=data_frame['features'].copy()
-        label_copy=data_frame['label'].copy()
-        subject_id=[f'subj_{idx}' for _ in range(feature_copy.shape[0])]
-        feature_copy['subject_id']=subject_id
-        feature_copy.set_index("subject_id",inplace=True)
-        label_copy['subject_id']=subject_id
-        label_copy.set_index("subject_id",inplace=True)
-        epochs_column=[f"ep_{i}" for i in range(1,feature_copy.shape[0]+1)]
-        feature_copy.insert(0,"epoch_id",epochs_column)
-        data_frames.append(pd.concat([feature_copy,label_copy],axis=1,sort=False))
-    dataset=pd.concat(data_frames,sort=False)
-    target=pd.DataFrame(dataset["target"],index=dataset.index.tolist(),columns=["target"])
-    features=dataset.drop(columns=["target"])
-    print(dataset)
-    return features,target
+
 def run_lda_pipeline_holdout_evaluation(subjects:list[int]):
     data_frames = {}
     for i in subjects:
-        epochs = ext.get_and_inspect_preprocessed_epochs(ext.get_subject_raw_data(subject_id=i))
+        # epochs = ext.get_and_inspect_preprocessed_epochs(ext.get_subject_raw_data(subject_id=i))
+        epochs=mne.read_epochs(PROJECT_ROOT/"data"/"preprocessed"/f"subject_{i}_clean-epo.fif",preload=True)
         data_frames[i] = {
             "features": ext.feature_extraction(epochs),
             "label": ext.target_extraction(epochs)
         }
-    features,target=create_data_set(data_frames)
-    lda_pipeline_holdout_evaluation(features,target)
+    features,target=ext.create_data_set(data_frames)
+    selected_subjects={}
+    for idx in range(1,9):
+        if idx in subjects:
+            selected_subjects[f"subject_{idx}"]=1
+        else:
+            selected_subjects[f"subject_{idx}"]=0
+    lda_pipeline_holdout_evaluation(features,target,selected_subjects)
 
 
 
 
 
 if __name__ == "__main__":
-    run_lda_pipeline_holdout_evaluation(subjects=[2,8])
+    run_lda_pipeline_holdout_evaluation(subjects=[1,2])
