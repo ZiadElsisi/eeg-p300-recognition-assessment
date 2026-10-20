@@ -11,6 +11,8 @@ import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
+    balanced_accuracy_score,
     confusion_matrix,
     f1_score,
     precision_score,
@@ -22,6 +24,7 @@ from sklearn.preprocessing import StandardScaler
 import mne  # imported lazily so the unit tests do not need MNE
 from src.features.feature_extraction import feature_extraction
 from sklearn.model_selection import LeaveOneGroupOut
+import pytest
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -33,7 +36,15 @@ RESULTS_DIR = PROJECT_ROOT / "results" / "loso"
 NONTARGET_LABEL = 1
 TARGET_LABEL = 2
 
-METRICS = ["accuracy", "precision", "recall", "f1", "roc_auc"]
+METRICS = [
+    "accuracy",
+    "precision",
+    "recall",
+    "f1",
+    "roc_auc",
+    "pr_auc",
+    "balanced_accuracy",
+]
 
 
 
@@ -188,6 +199,10 @@ def compute_metrics(y_true, y_pred, y_prob_target) -> dict:
             y_true, y_pred, pos_label=TARGET_LABEL, zero_division=0
         ),
         "roc_auc": roc_auc_score(y_true == TARGET_LABEL, y_prob_target),
+        "pr_auc": average_precision_score(
+            y_true == TARGET_LABEL, y_prob_target
+        ),
+        "balanced_accuracy": balanced_accuracy_score(y_true, y_pred),
         "tn": tn,
         "fp": fp,
         "fn": fn,
@@ -290,6 +305,95 @@ def main() -> None:
 
     # print_comparison(summary_df)
     print(f"\nSaved: {fold_path}\nSaved: {summary_path}")
+
+SUBJECTS = [1, 2, 3, 4, 5, 6]
+N_PER_SUBJECT = {1: 120, 2: 110, 3: 130, 4: 100, 5: 125, 6: 115}
+N_FEATURES = 6
+SENTINEL_COL = N_FEATURES - 1
+
+
+def sentinel_value(subject: int) -> float:
+    return 1000.0 + subject
+
+
+@pytest.fixture
+def synthetic():
+    rng = np.random.default_rng(0)
+    X_parts, y_parts, id_parts = [], [], []
+    for subject in SUBJECTS:
+        n = N_PER_SUBJECT[subject]
+        y_subject = np.where(
+            rng.random(n) < 0.2, TARGET_LABEL, NONTARGET_LABEL
+        )
+        X_subject = rng.normal(size=(n, N_FEATURES))
+        X_subject[y_subject == TARGET_LABEL, 0] += 2.0
+        X_subject[:, SENTINEL_COL] = sentinel_value(subject)
+        X_parts.append(X_subject)
+        y_parts.append(y_subject)
+        id_parts.append(np.full(n, subject))
+    return np.vstack(X_parts), np.concatenate(y_parts), np.concatenate(id_parts)
+
+
+class SpyModel:
+    fit_sentinels = []
+    predict_sentinels = []
+    fit_sizes = []
+
+    def __init__(self):
+        self.model = Pipeline([
+            ("scaler", StandardScaler()),
+            ("classifier", LinearDiscriminantAnalysis(priors=[0.5, 0.5])),
+        ])
+
+    @property
+    def classes_(self):
+        return self.model.classes_
+
+    def fit(self, X, y):
+        type(self).fit_sentinels.append(set(np.unique(X[:, SENTINEL_COL])))
+        type(self).fit_sizes.append(len(X))
+        self.model.fit(X, y)
+        return self
+
+    def predict(self, X):
+        type(self).predict_sentinels.append(set(np.unique(X[:, SENTINEL_COL])))
+        return self.model.predict(X)
+
+    def predict_proba(self, X):
+        return self.model.predict_proba(X)
+
+
+def reset_spy():
+    SpyModel.fit_sentinels = []
+    SpyModel.predict_sentinels = []
+    SpyModel.fit_sizes = []
+
+
+def test_held_out_subject_never_seen_in_training(synthetic, monkeypatch):
+    X, y, ids = synthetic
+    reset_spy()
+    monkeypatch.setattr(sys.modules[__name__], "build_model", SpyModel)
+    df = run_loso(X, y, ids, model_factory=SpyModel)
+
+    assert len(SpyModel.fit_sentinels) == len(SUBJECTS)
+    assert df["held_out_subject"].tolist() == SUBJECTS
+    for fold_no, held in enumerate(SUBJECTS):
+        fit_seen = SpyModel.fit_sentinels[fold_no]
+        pred_seen = SpyModel.predict_sentinels[fold_no]
+        assert sentinel_value(held) not in fit_seen
+        assert fit_seen == {sentinel_value(s) for s in SUBJECTS if s != held}
+        assert pred_seen == {sentinel_value(held)}
+        assert SpyModel.fit_sizes[fold_no] == (
+            sum(N_PER_SUBJECT.values()) - N_PER_SUBJECT[held]
+        )
+
+    # run_loso's output omits train_subjects; verify its existing fold records.
+    for fold in make_loso_folds(ids):
+        held = fold["held_out_subject"]
+        train = fold["train_subjects"]
+        assert held not in train
+        assert len(train) == len(SUBJECTS) - 1
+
 
 
 if __name__ == "__main__":
