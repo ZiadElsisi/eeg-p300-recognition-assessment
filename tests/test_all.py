@@ -18,7 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.loaders import bnci2014_008 as loader
 from src.preprocessing import pipeline
-from src.simulation.synthetic_p300 import generate_synthetic_p300
+from src.simulation.synthetic_p300 import DEFAULT_CHANNELS, generate_synthetic_p300
 
 
 def _make_raw_with_events():
@@ -97,7 +97,11 @@ def test_ut04_baseline_is_approximately_zero_after_correction():
 
 def test_ut05_synthetic_target_has_positive_p300_window_difference():
     data, labels, times = generate_synthetic_p300(seed=42)
-    pz_index = ("Fz", "Cz", "Pz", "P3", "P4").index("Pz")
+    assert DEFAULT_CHANNELS == (
+        "Fz", "Cz", "Pz", "P3", "P4", "P7/T5", "P8/T6", "Fp1"
+    )
+    assert data.shape == (300, 8, 250)
+    pz_index = DEFAULT_CHANNELS.index("Pz")
     window = (times >= 0.300) & (times <= 0.500)
     target = data[labels == 1, pz_index][:, window].mean()
     nontarget = data[labels == 0, pz_index][:, window].mean()
@@ -111,7 +115,8 @@ def test_ut06_synthetic_no_p300_control_has_no_target_window_effect():
         seed=42,
         include_p300=False,
     )
-    pz_index = ("Fz", "Cz", "Pz", "P3", "P4").index("Pz")
+    assert data.shape == (300, 8, 250)
+    pz_index = DEFAULT_CHANNELS.index("Pz")
     window = (times >= 0.300) & (times <= 0.500)
     target = data[labels == 1, pz_index][:, window].mean()
     nontarget = data[labels == 0, pz_index][:, window].mean()
@@ -122,13 +127,16 @@ def test_ut06_synthetic_no_p300_control_has_no_target_window_effect():
 def test_ut07_fixed_seed_reproduces_grouped_splits_and_fold_metrics():
     import pandas as pd
     from src.evaluation.subject_dependent_5fold import (
+        assert_no_group_overlap,
         evaluate_fold,
         make_grouped_splits,
+        trial_ids_to_block_ids,
     )
 
     rng = np.random.default_rng(23)
-    labels = np.tile([2, 1, 1, 1], 20)
-    groups = np.repeat(np.arange(20), 4)
+    trial_ids = np.repeat(np.arange(35), 4)
+    groups = trial_ids_to_block_ids(trial_ids, n_trial_boundaries=35)
+    labels = np.tile([2, 1, 1, 1], 35)
     features = rng.normal(size=(len(labels), 8))
     features[labels == 2, 0] += 1.5
     features = pd.DataFrame(features)
@@ -142,7 +150,54 @@ def test_ut07_fixed_seed_reproduces_grouped_splits_and_fold_metrics():
     for (train_a, test_a), (train_b, test_b) in zip(first_splits, second_splits):
         np.testing.assert_array_equal(train_a, train_b)
         np.testing.assert_array_equal(test_a, test_b)
-        assert not set(groups[train_a]).intersection(groups[test_a])
+        assert_no_group_overlap(groups, train_a, test_a)
         first_metrics.append(evaluate_fold(features, labels, train_a, test_a)[0])
         second_metrics.append(evaluate_fold(features, labels, train_b, test_b)[0])
     assert first_metrics == second_metrics
+
+
+def test_ut08_loso_test_subject_is_excluded_from_training_and_tuning(monkeypatch):
+    from src.evaluation import loso
+
+    subjects = np.repeat([1, 2, 3], 8)
+    X = np.column_stack([
+        subjects.astype(float),
+        np.arange(len(subjects), dtype=float),
+    ])
+    y = np.tile([1, 1, 2, 2], 6)
+
+    class FitSpy:
+        classes_ = np.array([1, 2])
+        fitted_subject_sets = []
+        predicted_subject_sets = []
+
+        def fit(self, features, labels):
+            type(self).fitted_subject_sets.append(set(features[:, 0].astype(int)))
+            return self
+
+        def predict(self, features):
+            type(self).predicted_subject_sets.append(
+                set(features[:, 0].astype(int))
+            )
+            return np.ones(len(features), dtype=int)
+
+        def predict_proba(self, features):
+            return np.tile([0.5, 0.5], (len(features), 1))
+
+    FitSpy.fitted_subject_sets = []
+    FitSpy.predicted_subject_sets = []
+    monkeypatch.setattr(loso, "build_model", FitSpy)
+
+    results = loso.run_loso(X, y, subjects)
+
+    assert len(results) == 3
+    assert len(FitSpy.fitted_subject_sets) == 3  # one fit per fold; no tuning fit
+    assert len(FitSpy.predicted_subject_sets) == 3
+    for held_out, train_seen, test_seen in zip(
+        results["held_out_subject"],
+        FitSpy.fitted_subject_sets,
+        FitSpy.predicted_subject_sets,
+    ):
+        assert int(held_out) not in train_seen
+        assert train_seen == set(subjects) - {int(held_out)}
+        assert test_seen == {int(held_out)}

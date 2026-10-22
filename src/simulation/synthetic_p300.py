@@ -1,12 +1,16 @@
 
 import numpy as np
 
+DEFAULT_CHANNELS = (
+    "Fz", "Cz", "Pz", "P3", "P4", "P7/T5", "P8/T6", "Fp1"
+)
+
 
 def generate_synthetic_p300(
     n_target=60,
     n_nontarget=240,
     sfreq=250,
-    channels=("Fz", "Cz", "Pz", "P3", "P4"),
+    channels=DEFAULT_CHANNELS,
     noise_std=5.0,
     p300_amplitude=8.0,
     p300_latency=0.350,
@@ -53,10 +57,11 @@ def generate_synthetic_p300(
     y = y[order]
 
     # Add a P300-like positive Gaussian to target trials
-    parietal_names = {"Pz", "P3", "P4", "P7", "P8"}
+    parietal_names = {"Pz", "P3", "P4", "P7", "P8", "P7/T5", "P8/T6"}
     channel_weights = np.array([
         1.0 if ch == "Pz" else
         0.7 if ch in parietal_names else
+        0.0 if ch == "Fp1" else
         0.25
         for ch in channels
     ])

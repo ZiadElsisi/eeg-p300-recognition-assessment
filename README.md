@@ -107,6 +107,18 @@ The planned EEG/P300 processing workflow includes:
 
 The baseline classification approach uses Linear Discriminant Analysis (LDA). EEGNet with PyTorch may also be explored as an additional model.
 
+### Subject-dependent cross-validation and leakage control
+
+The subject-dependent evaluation uses stratified five-fold group cross-validation with **block ID** as the group. The source BNCI 2014-008 MAT files contain trial start samples but no explicit block field. Dataset metadata specifies 35 character trials (seven five-character words) and seven blocks per session; the implementation maps each five consecutive trial IDs to one block (`block_id = trial_id // 5`) and stops if the expected 35 trial starts are absent. Each epoch is mapped to its trial from its event sample and the original trial starts, then to the corresponding block. All epochs from a block stay together in one fold. Runtime checks and automated tests assert that train and test block IDs do not overlap.
+
+### Imbalanced-class evaluation policy
+
+The BNCI2014-008 evaluation has an approximately 1:5 Target-to-NonTarget ratio. Accuracy is reported for context and is never a success criterion by itself. Target (label `2`) is the positive class. Subject-dependent five-fold and LOSO results report Target precision, recall, and F1, ROC-AUC, PR-AUC (average precision), and balanced accuracy for each fold or held-out subject; summaries report the mean and standard deviation across folds/subjects.
+
+For this imbalanced dataset, the evaluation's **above-chance target-detection criterion** is that the grouped-CV macro means exceed their no-skill baselines: ROC-AUC > 0.5, balanced accuracy > 0.5, and PR-AUC > the observed Target prevalence (about 0.167). Target F1, recall, and precision at the model's default decision threshold must also be reported to show the precision/recall tradeoff. These criteria support an above-chance finding; they do not establish application readiness. No minimum application-specific Target precision has been agreed, so no stronger usefulness/pass threshold is claimed. Any future operating-threshold selection must use training data only, not the held-out fold.
+
+On the current subject-dependent grouped five-fold run, the across-subject means are Target F1 0.572, Target precision 0.460, Target recall 0.761, ROC-AUC 0.866, PR-AUC/average precision 0.644, and balanced accuracy 0.789. The ROC-AUC, PR-AUC, and balanced-accuracy means exceed their stated baselines; accuracy (0.808) is descriptive only.
+
 ## Development Status
 
 The repository currently contains the initial project structure and reproducible Python development environment.

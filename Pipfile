@@ -4,16 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-numpy = "*"
-scipy = "*"
-pandas = "*"
-mne = "*"
-scikit-learn = "*"
-matplotlib = "*"
-moabb = "*"
+numpy = "==2.4.6"
+scipy = "==1.17.1"
+pandas = "==3.0.6"
+mne = "==1.13.2"
+scikit-learn = "==1.9.1"
+matplotlib = "==3.11.2"
+moabb = "==1.7.2"
 
 [dev-packages]
-pytest = "*"
+pytest = "==9.1.1"
 
 [requires]
 python_version = "3.11"

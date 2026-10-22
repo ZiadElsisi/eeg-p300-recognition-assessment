@@ -210,7 +210,7 @@ def compute_metrics(y_true, y_pred, y_prob_target) -> dict:
     }
 
 
-def evaluate_fold(fold: dict, X, y):
+def evaluate_fold(fold: dict, X, y, model_factory=build_model):
     X = np.asarray(X, dtype=float)
     y = np.asarray(y)
 
@@ -219,7 +219,7 @@ def evaluate_fold(fold: dict, X, y):
     X_test,  y_test  = X[fold["test_idx"]],  y[fold["test_idx"]]
 
     # 2. Train a new model
-    model = build_model()
+    model = model_factory()
     model.fit(X_train, y_train)
 
     # 3. Predict on the held-out person
@@ -237,14 +237,16 @@ def run_loso(X, y, subject_ids, model_factory=build_model,
     folds = make_loso_folds(subject_ids)
     rows = []
     for fold in folds:
-        row = evaluate_fold(fold, X, y,)
+        row = evaluate_fold(fold, X, y, model_factory=model_factory)
         rows.append(row)
         if verbose:
             print(
                 f"Held-out subject {row['held_out_subject']} | "
                 f"acc={row['accuracy']:.3f} prec={row['precision']:.3f} "
                 f"rec={row['recall']:.3f} f1={row['f1']:.3f} "
-                f"auc={row['roc_auc']:.3f}  "
+                f"roc_auc={row['roc_auc']:.3f} "
+                f"pr_auc={row['pr_auc']:.3f} "
+                f"balanced_acc={row['balanced_accuracy']:.3f} "
                 f"CM[[tn fp][fn tp]]=[[{row['tn']} {row['fp']}]"
                 f"[{row['fn']} {row['tp']}]]"
             )

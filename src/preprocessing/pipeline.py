@@ -132,6 +132,12 @@ def _verify_baseline(epochs: mne.Epochs) -> float:
     physiological signals, so they should never be included in the
     baseline amplitude sanity check.
     """
+    if len(epochs) == 0:
+        raise ValueError(
+            "No epochs remain after epoching and artifact rejection; "
+            "baseline verification cannot run."
+        )
+
     baseline_mask = (epochs.times >= TMIN - 1e-12) & (
         epochs.times <= 0.0 + 1e-12
     )
