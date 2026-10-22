@@ -1,0 +1,3 @@
+channel,analysis_role,subjects,target_mean_300_500_ms_uv,nontarget_mean_300_500_ms_uv,target_minus_nontarget_uv
+Pz,pre-specified primary,8,-0.042912121639515056,0.015645162283724732,-0.05855728392323979
+Fz,exploratory secondary,8,0.8695676934415841,-0.11702398746123208,0.9865916809028162

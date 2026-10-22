@@ -1,0 +1,2 @@
+Analysis,Subjects included,Channel,P300 window,Target mean amplitude (µV),NonTarget mean amplitude (µV),Target − NonTarget mean (µV),Target peak latency (ms),Target peak amplitude (µV),NonTarget peak latency (ms),NonTarget peak amplitude (µV)
+Grand average,8,Pz,300–500 ms,-0.04291212163951506,0.015645162283724732,-0.05855728392323979,378.90625,0.6346487194086103,375.0,0.6689838068839331

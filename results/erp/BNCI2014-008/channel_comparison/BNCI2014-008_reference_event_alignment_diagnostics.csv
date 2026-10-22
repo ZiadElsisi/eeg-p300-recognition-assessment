@@ -1,0 +1,9 @@
+subject,sfreq_hz,epoch_start_s,epoch_end_s,zero_sample_time_s,zero_sample_offset_ms,event_onset_sample_count,custom_ref_applied,active_projectors,bad_channels,event_id
+1,256.0,-0.19921875,0.80078125,0.0,0.0,4160,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+2,256.0,-0.19921875,0.80078125,0.0,0.0,4069,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+3,256.0,-0.19921875,0.80078125,0.0,0.0,4100,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+4,256.0,-0.19921875,0.80078125,0.0,0.0,4184,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+5,256.0,-0.19921875,0.80078125,0.0,0.0,4188,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+6,256.0,-0.19921875,0.80078125,0.0,0.0,4172,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+7,256.0,-0.19921875,0.80078125,0.0,0.0,3420,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"
+8,256.0,-0.19921875,0.80078125,0.0,0.0,4196,0 (FIFFV_MNE_CUSTOM_REF_OFF),0,,"{'NonTarget': 1, 'Target': 2}"

@@ -1,0 +1,698 @@
+[
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 40,
+      "amplitude_rejected_percent_of_input_events": 0.9523809523809523,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3463,
+        "Target": 697
+      },
+      "retained_epochs": 4160,
+      "total_dropped": 40
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A01.mat",
+      "raw_dataset_sha256": "cdf9bca4f48c61ee9c9ba998382a4e84392918c9dbc5a43f45ee0052614e25bd"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A01.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 1
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_1_clean-epo.fif",
+      "sha256": "b250b45e429a0c95f83f23df8b450f2ab3fb1e45f8876f83e565032bbe1b150e"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 5.342823205757894e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 131,
+      "amplitude_rejected_percent_of_input_events": 3.119047619047619,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3392,
+        "Target": 677
+      },
+      "retained_epochs": 4069,
+      "total_dropped": 131
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A02.mat",
+      "raw_dataset_sha256": "0023ee04e4a113231c125bcfdf59780ed95d858a5e5c0bc993701eb6c9652894"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A02.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 2
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_2_clean-epo.fif",
+      "sha256": "1dee37a68854acf7a116a22de2ff22584e51cf1504d854a742fbf0e98582d868"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 7.753609286404749e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 100,
+      "amplitude_rejected_percent_of_input_events": 2.380952380952381,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3416,
+        "Target": 684
+      },
+      "retained_epochs": 4100,
+      "total_dropped": 100
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A03.mat",
+      "raw_dataset_sha256": "820287459d83e5512e3ac00cdb25d1806b26518daba14281c61983b230f9dd9f"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A03.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 3
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_3_clean-epo.fif",
+      "sha256": "0295a7da1245fe74e1752ead198d58f2b44c06c60a5166d4b37723f367196dd1"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 8.079391189194865e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 16,
+      "amplitude_rejected_percent_of_input_events": 0.38095238095238093,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3486,
+        "Target": 698
+      },
+      "retained_epochs": 4184,
+      "total_dropped": 16
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A04.mat",
+      "raw_dataset_sha256": "65b14803eb38fda4910cca1103e4b527be1624155f106fe8083861bbf3e644e3"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A04.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 4
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_4_clean-epo.fif",
+      "sha256": "4104481c5f879b86ae591130bc1fd85a7e4c0ae098ec41234458416063793b21"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 9.252206039239281e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 12,
+      "amplitude_rejected_percent_of_input_events": 0.2857142857142857,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3489,
+        "Target": 699
+      },
+      "retained_epochs": 4188,
+      "total_dropped": 12
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A05.mat",
+      "raw_dataset_sha256": "d372ae2c39ece0c8dded986307e70ebb7f4bdf2c5c2fa2382c8ba489fb59f200"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A05.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 5
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_5_clean-epo.fif",
+      "sha256": "63d7397668040b9aaeeb4fa2bcb68469c045107d5ecf0b35f68389ad42b5e2c3"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 7.167201861382541e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 28,
+      "amplitude_rejected_percent_of_input_events": 0.6666666666666666,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3477,
+        "Target": 695
+      },
+      "retained_epochs": 4172,
+      "total_dropped": 28
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A06.mat",
+      "raw_dataset_sha256": "8320e78fb0d73baa03857c4976a4b4d8e605b1c9a7a4cf2e5e80e1bb6fd30337"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A06.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 6
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_6_clean-epo.fif",
+      "sha256": "f5e1237d89457ff77795601136695bc47fc9aee39e84b548aa68cd061a6f2e68"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 7.427827383614634e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 780,
+      "amplitude_rejected_percent_of_input_events": 18.571428571428573,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 2914,
+        "Target": 506
+      },
+      "retained_epochs": 3420,
+      "total_dropped": 780
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A07.mat",
+      "raw_dataset_sha256": "444d9da58332f58e89e7cdd39f9d9e7b0cb8ee4fd01ce03ef3ce57e53068f47c"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A07.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 7
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_7_clean-epo.fif",
+      "sha256": "aee90cbcd115699783d885f59719a072e219005b2042ba2c247ff5b6aa99d4c9"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 8.861267755891142e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  },
+  {
+    "configuration": {
+      "artifact_rule": {
+        "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+        "threshold_uv": 70.0,
+        "type": "absolute_amplitude"
+      },
+      "band_pass": {
+        "filter_type": "Butterworth",
+        "high_hz": 30.0,
+        "low_hz": 0.1,
+        "method": "IIR",
+        "order": 4,
+        "phase": "zero"
+      },
+      "baseline_seconds": [
+        -0.2,
+        0.0
+      ],
+      "eeg_channels": [
+        "Fz",
+        "Cz",
+        "Pz",
+        "Oz",
+        "P3",
+        "P4",
+        "PO7",
+        "PO8"
+      ],
+      "epoch_window_seconds": [
+        -0.2,
+        0.8
+      ],
+      "event_channel": "Target stim",
+      "event_id": {
+        "NonTarget": 1,
+        "Target": 2
+      },
+      "notch": {
+        "applied": false,
+        "frequency_hz": null
+      }
+    },
+    "counts": {
+      "amplitude_rejected_epochs": 4,
+      "amplitude_rejected_percent_of_input_events": 0.09523809523809523,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3496,
+        "Target": 700
+      },
+      "retained_epochs": 4196,
+      "total_dropped": 4
+    },
+    "provenance": {
+      "preprocessing_source": "src/preprocessing/pipeline.py",
+      "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A08.mat",
+      "raw_dataset_sha256": "7b5d249058dcac4ad477ea8591256d51c19df384551eba82b6c88e3ae6333571"
+    },
+    "run": {
+      "dataset": "BNCI2014-008",
+      "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A08.mat",
+      "run_id": "0",
+      "session_id": "0",
+      "subject_id": 8
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_8_clean-epo.fif",
+      "sha256": "4c149393e608a90af1080224a7b86a9138ed36e46073bcddd8e3201fa72a144b"
+    },
+    "software": {
+      "mne": "1.13.2",
+      "numpy": "2.4.6"
+    },
+    "status": "passed",
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 4.039695594597432e-21,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
+    }
+  }
+]

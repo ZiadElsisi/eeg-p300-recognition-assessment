@@ -1,0 +1,5 @@
+Subject,Target rejected,NonTarget rejected,Total rejection (%),Pz difference 300-500 ms (uV),Positive-channel fraction,Spatial finding,Target peak after 500 ms,Target-NonTarget difference 500-800 ms (uV),Target-NonTarget difference 300-800 ms (uV),Peak at 300-500 boundary,Cohen d,Mann-Whitney p
+subject_02,23,108,3.119047619047619,-0.42973411604590656,0.25,Negative difference across most channels,True,0.04729370718723078,-0.14649884600123125,True,-0.10930206382614392,0.0008518632888806557
+subject_05,1,11,0.2857142857142857,-0.7351685013626009,0.0,Negative difference across most channels,True,0.7870940777660218,0.1686749049950188,False,-0.19686567276492686,3.2425020830552603e-06
+subject_07,194,586,18.571428571428573,-0.4193669155826544,0.625,"Pz negative, most other channels positive",True,0.6790949032323728,0.23284478933876795,True,-0.11804566904646836,0.011810001246239963
+subject_08,0,4,0.09523809523809523,-0.9620383243848378,0.25,Negative difference across most channels,True,0.22204414804015699,-0.2589893563824973,True,-0.3141583011854836,6.775719701586219e-14

@@ -1,0 +1,10 @@
+Pz primary ERP analysis (BNCI2014-008)
+Pz was designated as the pre-specified primary channel. Fz is exploratory.
+Window: 300-500 ms; subjects: 8.
+Pz target-minus-nontarget difference was positive in 4/8 subjects.
+Exploratory Fz target-minus-nontarget difference was positive in 7/8 subjects.
+Stored custom-reference metadata: 0 (FIFFV_MNE_CUSTOM_REF_OFF).
+Stored epoch event zero-sample offsets (ms): [0.0].
+Reference and zero-sample metadata are in the dataset-prefixed reference-event diagnostic CSV.
+The zero sample confirms alignment to the stored epoch event marker; without the original raw trigger stream, it cannot independently verify acquisition-time trigger accuracy.
+Reference metadata records what is stored in the epoch files; it cannot reconstruct undocumented reference changes made before those files were saved.

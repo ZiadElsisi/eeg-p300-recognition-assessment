@@ -1,0 +1,87 @@
+{
+  "configuration": {
+    "artifact_rule": {
+      "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
+      "threshold_uv": 70.0,
+      "type": "absolute_amplitude"
+    },
+    "band_pass": {
+      "filter_type": "Butterworth",
+      "high_hz": 30.0,
+      "low_hz": 0.1,
+      "method": "IIR",
+      "order": 4,
+      "phase": "zero"
+    },
+    "baseline_seconds": [
+      -0.2,
+      0.0
+    ],
+    "eeg_channels": [
+      "Fz",
+      "Cz",
+      "Pz",
+      "Oz",
+      "P3",
+      "P4",
+      "PO7",
+      "PO8"
+    ],
+    "epoch_window_seconds": [
+      -0.2,
+      0.8
+    ],
+    "event_channel": "Target stim",
+    "event_id": {
+      "NonTarget": 1,
+      "Target": 2
+    },
+    "notch": {
+      "applied": false,
+      "frequency_hz": null
+    }
+  },
+  "counts": {
+    "amplitude_rejected_epochs": 40,
+    "amplitude_rejected_percent_of_input_events": 0.9523809523809523,
+    "boundary_drops": 0,
+    "input_events": 4200,
+    "other_drops": 0,
+    "retained_by_class": {
+      "NonTarget": 3463,
+      "Target": 697
+    },
+    "retained_epochs": 4160,
+    "total_dropped": 40
+  },
+  "provenance": {
+    "preprocessing_source": "src/preprocessing/pipeline.py",
+    "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+    "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A01.mat",
+    "raw_dataset_sha256": "cdf9bca4f48c61ee9c9ba998382a4e84392918c9dbc5a43f45ee0052614e25bd"
+  },
+  "run": {
+    "dataset": "BNCI2014-008",
+    "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A01.mat",
+    "run_id": "0",
+    "session_id": "0",
+    "subject_id": 1
+  },
+  "saved_epochs": {
+    "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_1_clean-epo.fif",
+    "sha256": "b250b45e429a0c95f83f23df8b450f2ab3fb1e45f8876f83e565032bbe1b150e"
+  },
+  "software": {
+    "mne": "1.13.2",
+    "numpy": "2.4.6"
+  },
+  "status": "passed",
+  "verification": {
+    "actual_samples_per_epoch": 257,
+    "baseline_max_abs_mean_v": 5.342823205757894e-21,
+    "expected_samples_per_epoch": 257,
+    "first_sample_time_seconds": -0.19921875,
+    "last_sample_time_seconds": 0.80078125,
+    "sampling_rate_hz": 256.0
+  }
+}

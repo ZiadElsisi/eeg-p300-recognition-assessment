@@ -1,0 +1,350 @@
+[
+  {
+    "scenario": "clean_p300",
+    "shape": [
+      300,
+      8,
+      250
+    ],
+    "sampling_frequency_hz": 250,
+    "epoch_time_range_seconds": [
+      -0.2,
+      0.8
+    ],
+    "target_trials": 60,
+    "nontarget_trials": 240,
+    "class_labels": {
+      "Target": 1,
+      "NonTarget": 0
+    },
+    "noise_std": 3.0,
+    "p300_injected": true,
+    "simulated_shift_ms": 0.0,
+    "generation_parameters": {
+      "background_noise": {
+        "type": "zero-mean Gaussian white noise",
+        "standard_deviation_arbitrary_units": 3.0
+      },
+      "p300": {
+        "waveform": "positive Gaussian",
+        "nominal_center_ms": 350.0,
+        "peak_amplitude_arbitrary_units": 8.0,
+        "gaussian_sigma_ms": 50.0,
+        "latency_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_ms": 20.0
+        },
+        "amplitude_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_fraction": 0.15
+        },
+        "relative_channel_weights": {
+          "Fz": 0.25,
+          "Cz": 0.25,
+          "Pz": 1.0,
+          "P3": 0.7,
+          "P4": 0.7,
+          "P7/T5": 0.7,
+          "P8/T6": 0.7,
+          "Fp1": 0.0
+        }
+      },
+      "trigger_shift_applied_to": "target P300 latency"
+    },
+    "reference_latency_ms": 349.93552157847654,
+    "detected_p300_latency_ms": 350.81614448990246,
+    "detected_shift_ms": 0.8806229114259168,
+    "target_mean_300_500": 4.023486540466917,
+    "nontarget_mean_300_500": -0.017576344517480677
+  },
+  {
+    "scenario": "noisy_p300",
+    "shape": [
+      300,
+      8,
+      250
+    ],
+    "sampling_frequency_hz": 250,
+    "epoch_time_range_seconds": [
+      -0.2,
+      0.8
+    ],
+    "target_trials": 60,
+    "nontarget_trials": 240,
+    "class_labels": {
+      "Target": 1,
+      "NonTarget": 0
+    },
+    "noise_std": 12.0,
+    "p300_injected": true,
+    "simulated_shift_ms": 0.0,
+    "generation_parameters": {
+      "background_noise": {
+        "type": "zero-mean Gaussian white noise",
+        "standard_deviation_arbitrary_units": 12.0
+      },
+      "p300": {
+        "waveform": "positive Gaussian",
+        "nominal_center_ms": 350.0,
+        "peak_amplitude_arbitrary_units": 8.0,
+        "gaussian_sigma_ms": 50.0,
+        "latency_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_ms": 20.0
+        },
+        "amplitude_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_fraction": 0.15
+        },
+        "relative_channel_weights": {
+          "Fz": 0.25,
+          "Cz": 0.25,
+          "Pz": 1.0,
+          "P3": 0.7,
+          "P4": 0.7,
+          "P7/T5": 0.7,
+          "P8/T6": 0.7,
+          "Fp1": 0.0
+        }
+      },
+      "trigger_shift_applied_to": "target P300 latency"
+    },
+    "reference_latency_ms": 349.93552157847654,
+    "detected_p300_latency_ms": 346.9284311708834,
+    "detected_shift_ms": -3.0070904075931253,
+    "target_mean_300_500": 3.593058170722836,
+    "nontarget_mean_300_500": -0.07030537806992271
+  },
+  {
+    "scenario": "no_p300_control",
+    "shape": [
+      300,
+      8,
+      250
+    ],
+    "sampling_frequency_hz": 250,
+    "epoch_time_range_seconds": [
+      -0.2,
+      0.8
+    ],
+    "target_trials": 60,
+    "nontarget_trials": 240,
+    "class_labels": {
+      "Target": 1,
+      "NonTarget": 0
+    },
+    "noise_std": 5.0,
+    "p300_injected": false,
+    "simulated_shift_ms": 0.0,
+    "generation_parameters": {
+      "background_noise": {
+        "type": "zero-mean Gaussian white noise",
+        "standard_deviation_arbitrary_units": 5.0
+      },
+      "p300": {
+        "waveform": "positive Gaussian",
+        "nominal_center_ms": 350.0,
+        "peak_amplitude_arbitrary_units": 8.0,
+        "gaussian_sigma_ms": 50.0,
+        "latency_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_ms": 20.0
+        },
+        "amplitude_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_fraction": 0.15
+        },
+        "relative_channel_weights": {
+          "Fz": 0.25,
+          "Cz": 0.25,
+          "Pz": 1.0,
+          "P3": 0.7,
+          "P4": 0.7,
+          "P7/T5": 0.7,
+          "P8/T6": 0.7,
+          "Fp1": 0.0
+        }
+      },
+      "trigger_shift_applied_to": "target P300 latency"
+    },
+    "reference_latency_ms": 349.93552157847654,
+    "detected_p300_latency_ms": null,
+    "detected_shift_ms": null,
+    "target_mean_300_500": -0.2391268720800445,
+    "nontarget_mean_300_500": -0.029293907529134456
+  },
+  {
+    "scenario": "shift_4ms",
+    "shape": [
+      300,
+      8,
+      250
+    ],
+    "sampling_frequency_hz": 250,
+    "epoch_time_range_seconds": [
+      -0.2,
+      0.8
+    ],
+    "target_trials": 60,
+    "nontarget_trials": 240,
+    "class_labels": {
+      "Target": 1,
+      "NonTarget": 0
+    },
+    "noise_std": 5.0,
+    "p300_injected": true,
+    "simulated_shift_ms": 4.0,
+    "generation_parameters": {
+      "background_noise": {
+        "type": "zero-mean Gaussian white noise",
+        "standard_deviation_arbitrary_units": 5.0
+      },
+      "p300": {
+        "waveform": "positive Gaussian",
+        "nominal_center_ms": 350.0,
+        "peak_amplitude_arbitrary_units": 8.0,
+        "gaussian_sigma_ms": 50.0,
+        "latency_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_ms": 20.0
+        },
+        "amplitude_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_fraction": 0.15
+        },
+        "relative_channel_weights": {
+          "Fz": 0.25,
+          "Cz": 0.25,
+          "Pz": 1.0,
+          "P3": 0.7,
+          "P4": 0.7,
+          "P7/T5": 0.7,
+          "P8/T6": 0.7,
+          "Fp1": 0.0
+        }
+      },
+      "trigger_shift_applied_to": "target P300 latency"
+    },
+    "reference_latency_ms": 349.93552157847654,
+    "detected_p300_latency_ms": 353.9202014735638,
+    "detected_shift_ms": 3.984679895087254,
+    "target_mean_300_500": 4.009517510478789,
+    "nontarget_mean_300_500": -0.029293907529134456
+  },
+  {
+    "scenario": "shift_8ms",
+    "shape": [
+      300,
+      8,
+      250
+    ],
+    "sampling_frequency_hz": 250,
+    "epoch_time_range_seconds": [
+      -0.2,
+      0.8
+    ],
+    "target_trials": 60,
+    "nontarget_trials": 240,
+    "class_labels": {
+      "Target": 1,
+      "NonTarget": 0
+    },
+    "noise_std": 5.0,
+    "p300_injected": true,
+    "simulated_shift_ms": 8.0,
+    "generation_parameters": {
+      "background_noise": {
+        "type": "zero-mean Gaussian white noise",
+        "standard_deviation_arbitrary_units": 5.0
+      },
+      "p300": {
+        "waveform": "positive Gaussian",
+        "nominal_center_ms": 350.0,
+        "peak_amplitude_arbitrary_units": 8.0,
+        "gaussian_sigma_ms": 50.0,
+        "latency_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_ms": 20.0
+        },
+        "amplitude_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_fraction": 0.15
+        },
+        "relative_channel_weights": {
+          "Fz": 0.25,
+          "Cz": 0.25,
+          "Pz": 1.0,
+          "P3": 0.7,
+          "P4": 0.7,
+          "P7/T5": 0.7,
+          "P8/T6": 0.7,
+          "Fp1": 0.0
+        }
+      },
+      "trigger_shift_applied_to": "target P300 latency"
+    },
+    "reference_latency_ms": 349.93552157847654,
+    "detected_p300_latency_ms": 357.92003924241163,
+    "detected_shift_ms": 7.984517663935094,
+    "target_mean_300_500": 4.083728746915768,
+    "nontarget_mean_300_500": -0.029293907529134456
+  },
+  {
+    "scenario": "shift_12ms",
+    "shape": [
+      300,
+      8,
+      250
+    ],
+    "sampling_frequency_hz": 250,
+    "epoch_time_range_seconds": [
+      -0.2,
+      0.8
+    ],
+    "target_trials": 60,
+    "nontarget_trials": 240,
+    "class_labels": {
+      "Target": 1,
+      "NonTarget": 0
+    },
+    "noise_std": 5.0,
+    "p300_injected": true,
+    "simulated_shift_ms": 12.0,
+    "generation_parameters": {
+      "background_noise": {
+        "type": "zero-mean Gaussian white noise",
+        "standard_deviation_arbitrary_units": 5.0
+      },
+      "p300": {
+        "waveform": "positive Gaussian",
+        "nominal_center_ms": 350.0,
+        "peak_amplitude_arbitrary_units": 8.0,
+        "gaussian_sigma_ms": 50.0,
+        "latency_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_ms": 20.0
+        },
+        "amplitude_jitter": {
+          "distribution": "normal, zero mean",
+          "standard_deviation_fraction": 0.15
+        },
+        "relative_channel_weights": {
+          "Fz": 0.25,
+          "Cz": 0.25,
+          "Pz": 1.0,
+          "P3": 0.7,
+          "P4": 0.7,
+          "P7/T5": 0.7,
+          "P8/T6": 0.7,
+          "Fp1": 0.0
+        }
+      },
+      "trigger_shift_applied_to": "target P300 latency"
+    },
+    "reference_latency_ms": 349.93552157847654,
+    "detected_p300_latency_ms": 361.93324452453106,
+    "detected_shift_ms": 11.997722946054523,
+    "target_mean_300_500": 4.15045821611172,
+    "nontarget_mean_300_500": -0.029293907529134456
+  }
+]

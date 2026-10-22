@@ -1,0 +1,9 @@
+Subject,event_id mapping,Target count,NonTarget count,Total,numeric event counts,both labels present,mapping matches MOABB
+subject_01,"{'NonTarget': 1, 'Target': 2}",697,3463,4160,"{np.int64(1): np.int64(3463), np.int64(2): np.int64(697)}",True,True
+subject_02,"{'NonTarget': 1, 'Target': 2}",677,3392,4069,"{np.int64(1): np.int64(3392), np.int64(2): np.int64(677)}",True,True
+subject_03,"{'NonTarget': 1, 'Target': 2}",684,3416,4100,"{np.int64(1): np.int64(3416), np.int64(2): np.int64(684)}",True,True
+subject_04,"{'NonTarget': 1, 'Target': 2}",698,3486,4184,"{np.int64(1): np.int64(3486), np.int64(2): np.int64(698)}",True,True
+subject_05,"{'NonTarget': 1, 'Target': 2}",699,3489,4188,"{np.int64(1): np.int64(3489), np.int64(2): np.int64(699)}",True,True
+subject_06,"{'NonTarget': 1, 'Target': 2}",695,3477,4172,"{np.int64(1): np.int64(3477), np.int64(2): np.int64(695)}",True,True
+subject_07,"{'NonTarget': 1, 'Target': 2}",506,2914,3420,"{np.int64(1): np.int64(2914), np.int64(2): np.int64(506)}",True,True
+subject_08,"{'NonTarget': 1, 'Target': 2}",700,3496,4196,"{np.int64(1): np.int64(3496), np.int64(2): np.int64(700)}",True,True
