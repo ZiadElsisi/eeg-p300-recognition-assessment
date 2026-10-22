@@ -4,37 +4,23 @@ import json
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import curve_fit
 
-from src.simulation.synthetic_p300 import DEFAULT_CHANNELS, generate_synthetic_p300
+from src.simulation.synthetic_p300 import (
+    DEFAULT_CHANNELS,
+    DEFAULT_AMPLITUDE_JITTER_FRACTION,
+    DEFAULT_LATENCY_JITTER_SECONDS,
+    DEFAULT_P300_AMPLITUDE,
+    DEFAULT_P300_LATENCY_SECONDS,
+    P300_GAUSSIAN_SIGMA_SECONDS,
+    generate_synthetic_p300,
+    get_channel_weights,
+)
+from src.simulation.timing_validation import estimate_p300_latency_ms
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = PROJECT_ROOT / "results" / "synthetic_p300"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def estimate_p300_latency_ms(times, target_average, nontarget_average):
-    """Fit a Gaussian to the target-minus-nontarget Pz response."""
-    fit_window = (times >= 0.240) & (times <= 0.550)
-    fit_times = times[fit_window]
-    difference = target_average[fit_window] - nontarget_average[fit_window]
-
-    def gaussian(time, offset, amplitude, latency, width):
-        return offset + amplitude * np.exp(
-            -0.5 * ((time - latency) / width) ** 2
-        )
-
-    parameters, _ = curve_fit(
-        gaussian,
-        fit_times,
-        difference,
-        p0=(0.0, max(float(difference.max()), 0.1), 0.350, 0.055),
-        bounds=((-np.inf, 0.0, 0.250, 0.025),
-                (np.inf, np.inf, 0.550, 0.120)),
-        maxfev=10000,
-    )
-    return float(parameters[2] * 1000.0)
 
 
 reference_data, reference_labels, reference_times = generate_synthetic_p300(
@@ -168,11 +154,36 @@ for scenario in SCENARIOS:
     result = {
         "scenario": name,
         "shape": list(X.shape),
+        "sampling_frequency_hz": 250,
+        "epoch_time_range_seconds": [-0.2, 0.8],
         "target_trials": int(np.sum(y == 1)),
         "nontarget_trials": int(np.sum(y == 0)),
+        "class_labels": {"Target": 1, "NonTarget": 0},
         "noise_std": scenario["noise_std"],
         "p300_injected": scenario["include_p300"],
         "simulated_shift_ms": scenario["shift_ms"],
+        "generation_parameters": {
+            "background_noise": {
+                "type": "zero-mean Gaussian white noise",
+                "standard_deviation_arbitrary_units": scenario["noise_std"],
+            },
+            "p300": {
+                "waveform": "positive Gaussian",
+                "nominal_center_ms": DEFAULT_P300_LATENCY_SECONDS * 1000,
+                "peak_amplitude_arbitrary_units": DEFAULT_P300_AMPLITUDE,
+                "gaussian_sigma_ms": P300_GAUSSIAN_SIGMA_SECONDS * 1000,
+                "latency_jitter": {
+                    "distribution": "normal, zero mean",
+                    "standard_deviation_ms": DEFAULT_LATENCY_JITTER_SECONDS * 1000,
+                },
+                "amplitude_jitter": {
+                    "distribution": "normal, zero mean",
+                    "standard_deviation_fraction": DEFAULT_AMPLITUDE_JITTER_FRACTION,
+                },
+                "relative_channel_weights": get_channel_weights(DEFAULT_CHANNELS),
+            },
+            "trigger_shift_applied_to": "target P300 latency",
+        },
         "reference_latency_ms": reference_latency_ms,
         "detected_p300_latency_ms": detected_latency_ms,
         "detected_shift_ms": detected_shift_ms,

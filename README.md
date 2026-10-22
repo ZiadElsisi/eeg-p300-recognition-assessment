@@ -107,6 +107,16 @@ The planned EEG/P300 processing workflow includes:
 
 The baseline classification approach uses Linear Discriminant Analysis (LDA). EEGNet with PyTorch may also be explored as an additional model.
 
+### ERP channel policy and interpretation
+
+Pz is the **pre-specified primary channel** for the BNCI2014-008 ERP analysis. Fz is reported only as an exploratory secondary channel; it was not promoted because it produced a larger response. The current per-subject analysis finds a positive Pz Target-minus-NonTarget mean in 4 of 8 subjects, compared with 7 of 8 at exploratory Fz. The equal-subject-weighted grand average and per-subject values are saved under `results/erp/BNCI2014-008/channel_comparison/`.
+
+The stored epoch metadata reports no custom reference applied and a zero-sample offset of 0 ms for every subject. This confirms alignment to the event marker saved in the epochs, but cannot establish the original acquisition-time trigger accuracy or recover undocumented reference changes made before saving.
+
+### Artifact threshold policy
+
+The current public-dataset preprocessing code rejects an epoch when any selected EEG sample exceeds **±70 µV absolute amplitude** after baseline correction. This is an absolute-amplitude rule, not a 150 µV peak-to-peak rule. A report that describes the current implementation as 150 µV peak-to-peak is inaccurate and should be corrected unless the code and results are deliberately regenerated under that rule. The hardware's proposed ±100 µV threshold is a separate provisional value; finalize it only after a Cyton pilot and do not treat it as equivalent to the public-data rule.
+
 ### Subject-dependent cross-validation and leakage control
 
 The subject-dependent evaluation uses stratified five-fold group cross-validation with **block ID** as the group. The source BNCI 2014-008 MAT files contain trial start samples but no explicit block field. Dataset metadata specifies 35 character trials (seven five-character words) and seven blocks per session; the implementation maps each five consecutive trial IDs to one block (`block_id = trial_id // 5`) and stops if the expected 35 trial starts are absent. Each epoch is mapped to its trial from its event sample and the original trial starts, then to the corresponding block. All epochs from a block stay together in one fold. Runtime checks and automated tests assert that train and test block IDs do not overlap.
@@ -119,11 +129,19 @@ For this imbalanced dataset, the evaluation's **above-chance target-detection cr
 
 On the current subject-dependent grouped five-fold run, the across-subject means are Target F1 0.572, Target precision 0.460, Target recall 0.761, ROC-AUC 0.866, PR-AUC/average precision 0.644, and balanced accuracy 0.789. The ROC-AUC, PR-AUC, and balanced-accuracy means exceed their stated baselines; accuracy (0.808) is descriptive only.
 
+### BNCI2015-003 pipeline compatibility check
+
+The current pipeline was run on all 20 BNCI2015-003 train/test recordings. It retained both event classes and completed preprocessing for 16 recordings. Four recordings (both runs for subjects 4 and 5) failed because the current ±70 µV absolute-amplitude rule rejected all 900 epochs per run. Their event channels contained 750 NonTarget and 150 Target events, so the failure is due to the artifact rule's compatibility with those recordings, not missing event markers. The per-record input counts and failure reasons are in `results/bnci2015_003/pipeline_verification.csv`. Do not claim full-dataset compatibility until the rule is reviewed and the validation is rerun.
+
+### Environment and code traceability
+
+The test and cross-dataset verification runs used **Python 3.11.16**. The working tree is currently modified, so `7ea1d4c397dbcb1cc99a7b369695ab54bebcb83d` identifies the base commit only; it does not identify all code used in the latest results. No `prehardware-v1.0` release tag exists. Create and record the release tag only after the reviewed changes have been committed. The current test inventory is eight main UT-01–UT-08 tests plus three parameterized numeric timing-shift checks; it is not an 18-test suite.
+
 ## Development Status
 
 The repository currently contains the initial project structure and reproducible Python development environment.
 
-The EEG acquisition, preprocessing, feature extraction, machine-learning, backend, frontend, database, and reporting components will be developed incrementally.
+The pre-hardware work currently includes public-dataset inspection and preprocessing, ERP analysis, LDA evaluation, subject-dependent grouped cross-validation, LOSO evaluation, and synthetic P300 software checks. Synthetic and public-dataset results do not replace validation on physical EEG hardware.
 
 ---
 

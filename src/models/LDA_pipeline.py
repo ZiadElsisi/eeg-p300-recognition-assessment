@@ -6,7 +6,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, confusion_matrix,
-                             ConfusionMatrixDisplay, roc_curve, roc_auc_score,classification_report,auc,precision_recall_curve)
+                             ConfusionMatrixDisplay, roc_curve, roc_auc_score, classification_report, auc,
+                             precision_recall_curve, balanced_accuracy_score)
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -15,7 +16,10 @@ from src.preprocessing.pipeline import PROJECT_ROOT
 #----------- Fix a Seed number -----------
 SEED=42
 TEST_SIZE=0.2
-EVALUATION_RESULTS_DIR = PROJECT_ROOT/"results"/"lda_holdout_evaluation"
+DATASET_NAME = "BNCI2014-008"
+EVALUATION_NAME = "LDA evaluation"
+EVALUATION_RESULTS_DIR = PROJECT_ROOT / "results" / EVALUATION_NAME / DATASET_NAME
+EVALUATION_FIGURES_DIR = PROJECT_ROOT / "figures" / EVALUATION_NAME / DATASET_NAME
 #----------- target/non target labels -----------
 labels={
     "target":2,
@@ -49,7 +53,7 @@ def lda_pipeline_holdout_evaluation(features:pd.DataFrame,target:pd.DataFrame | 
     }
 
     EVALUATION_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    with open(PROJECT_ROOT/"results"/"lda_holdout_evaluation"/"train_test_split.json",'w') as file:
+    with open(EVALUATION_RESULTS_DIR / f"{DATASET_NAME}_LDA_train_test_split.json",'w') as file:
         json.dump(indices,file,indent=4)
     #------------------------------------------------
     # Create Pipeline
@@ -82,8 +86,7 @@ def lda_pipeline_holdout_evaluation(features:pd.DataFrame,target:pd.DataFrame | 
     return prediction,predictions_prob
 
 def evaluation_report(y_true,y_pred,y_pred_prob,selected_subjects:dict[str,int]={}):
-    evaluation_figures_dir = PROJECT_ROOT / "figures" / "hold_out_evaluation"
-    evaluation_figures_dir.mkdir(parents=True, exist_ok=True)
+    EVALUATION_FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     #------------------------------------------------
     # PR-Auc curve
     # ------------------------------------------------
@@ -94,10 +97,10 @@ def evaluation_report(y_true,y_pred,y_pred_prob,selected_subjects:dict[str,int]=
     plt.axhline(y=baseline, linestyle='--', color='gray',label="Baseline")
     plt.xlabel("Recall")#
     plt.ylabel("Precision")
-    plt.title("Precision-Recall Curve")
+    plt.title(f"{DATASET_NAME} — LDA Precision-Recall Curve")
     plt.legend()
     plt.grid(True)
-    plt.savefig(PROJECT_ROOT/"figures"/"hold_out_evaluation"/"PR_AUC_curve.png")
+    plt.savefig(EVALUATION_FIGURES_DIR / f"{DATASET_NAME}_LDA_PR_AUC_curve.png")
     plt.close()
     #------------------------------------------------
     # EVALUATION DATA FRAME
@@ -106,20 +109,24 @@ def evaluation_report(y_true,y_pred,y_pred_prob,selected_subjects:dict[str,int]=
     "accuracy" : round(accuracy_score(y_true, y_pred), 2),
     "precision" : round(precision_score(y_true, y_pred, pos_label=2), 2),
     "recall" : round(recall_score(y_true, y_pred, pos_label=2), 2),
+    "balanced_accuracy":round(balanced_accuracy_score(y_true, y_pred),2),
     "f1_score" : round(f1_score(y_true, y_pred, pos_label=2), 2),
     "roc_auc" : round(roc_auc_score(y_true, y_pred_prob), 2),
     "pr_auc": pr_auc,
     }
     evaluation_df = pd.DataFrame.from_dict([selected_subjects | metrices])
-    evaluation_df.to_csv(EVALUATION_RESULTS_DIR/"holdout_evaluation_selected_subjects_metrices.csv")
+    evaluation_df.to_csv(
+        EVALUATION_RESULTS_DIR / f"{DATASET_NAME}_LDA_holdout_metrics.csv",
+        index=False,
+    )
     #------------------------------------------------
     # Confusion Matrix
     # ------------------------------------------------
     cf=confusion_matrix(y_true,y_pred)
     disp=ConfusionMatrixDisplay(confusion_matrix=cf,display_labels=['not target','target'])
     disp.plot()
-    plt.title("CONFUSION MATRIX")
-    plt.savefig(PROJECT_ROOT/"figures"/"hold_out_evaluation"/"confusion_matrix.png")
+    plt.title(f"{DATASET_NAME} — LDA Confusion Matrix")
+    plt.savefig(EVALUATION_FIGURES_DIR / f"{DATASET_NAME}_LDA_confusion_matrix.png")
     plt.close()
     #------------------------------------------------
     # Roc-Auc curve
@@ -129,10 +136,10 @@ def evaluation_report(y_true,y_pred,y_pred_prob,selected_subjects:dict[str,int]=
     plt.plot([0, 1], [0, 1], linestyle='--', color='gray', label="Chance")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate (Recall)")
-    plt.title("ROC Curve — Target vs NonTarget")
+    plt.title(f"{DATASET_NAME} — LDA ROC Curve — Target vs NonTarget")
     plt.legend()
     plt.grid(True)
-    plt.savefig(PROJECT_ROOT/"figures"/"hold_out_evaluation"/"ROC_curve.png")
+    plt.savefig(EVALUATION_FIGURES_DIR / f"{DATASET_NAME}_LDA_ROC_curve.png")
     plt.close()
 
 
@@ -162,4 +169,4 @@ def run_lda_pipeline_holdout_evaluation(subjects:list[int]):
 
 
 if __name__ == "__main__":
-    run_lda_pipeline_holdout_evaluation(subjects=[1,2])
+    run_lda_pipeline_holdout_evaluation(subjects=[8])

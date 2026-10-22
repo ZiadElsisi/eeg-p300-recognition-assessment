@@ -4,6 +4,26 @@ import numpy as np
 DEFAULT_CHANNELS = (
     "Fz", "Cz", "Pz", "P3", "P4", "P7/T5", "P8/T6", "Fp1"
 )
+DEFAULT_NOISE_STD = 5.0
+DEFAULT_P300_AMPLITUDE = 8.0
+DEFAULT_P300_LATENCY_SECONDS = 0.350
+DEFAULT_LATENCY_JITTER_SECONDS = 0.020
+DEFAULT_AMPLITUDE_JITTER_FRACTION = 0.15
+P300_GAUSSIAN_SIGMA_SECONDS = 0.050
+
+
+def get_channel_weights(channels=DEFAULT_CHANNELS):
+    """Return the relative P300 amplitude assigned to each channel."""
+    parietal_names = {"Pz", "P3", "P4", "P7", "P8", "P7/T5", "P8/T6"}
+    return {
+        ch: (
+            1.0 if ch == "Pz" else
+            0.7 if ch in parietal_names else
+            0.0 if ch == "Fp1" else
+            0.25
+        )
+        for ch in channels
+    }
 
 
 def generate_synthetic_p300(
@@ -11,11 +31,11 @@ def generate_synthetic_p300(
     n_nontarget=240,
     sfreq=250,
     channels=DEFAULT_CHANNELS,
-    noise_std=5.0,
-    p300_amplitude=8.0,
-    p300_latency=0.350,
-    latency_jitter=0.020,
-    amplitude_jitter=0.15,
+    noise_std=DEFAULT_NOISE_STD,
+    p300_amplitude=DEFAULT_P300_AMPLITUDE,
+    p300_latency=DEFAULT_P300_LATENCY_SECONDS,
+    latency_jitter=DEFAULT_LATENCY_JITTER_SECONDS,
+    amplitude_jitter=DEFAULT_AMPLITUDE_JITTER_FRACTION,
     seed=42,
     trigger_shift_ms=0.0,
     include_p300=True,
@@ -57,16 +77,7 @@ def generate_synthetic_p300(
     y = y[order]
 
     # Add a P300-like positive Gaussian to target trials
-    parietal_names = {"Pz", "P3", "P4", "P7", "P8", "P7/T5", "P8/T6"}
-    channel_weights = np.array([
-        1.0 if ch == "Pz" else
-        0.7 if ch in parietal_names else
-        0.0 if ch == "Fp1" else
-        0.25
-        for ch in channels
-    ])
-
-    sigma = 0.050  # 50 ms waveform width
+    channel_weights = np.array(list(get_channel_weights(channels).values()))
 
     if include_p300:
         for i in np.flatnonzero(y == 1):
@@ -81,7 +92,7 @@ def generate_synthetic_p300(
             latency += trigger_shift_ms / 1000.0
 
             p300 = amplitude * np.exp(
-                -0.5 * ((times - latency) / sigma) ** 2
+                -0.5 * ((times - latency) / P300_GAUSSIAN_SIGMA_SECONDS) ** 2
             )
 
             X[i] += channel_weights[:, None] * p300[None, :]

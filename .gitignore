@@ -16,3 +16,13 @@ venv/
 
 # macOS
 .DS_Store
+
+# Local datasets, caches, and generated preprocessing data
+/data/*
+!/data/.gitkeep
+!/data/train_test_split
+
+# Epoch exports (including compressed MNE files)
+*-epo.fif
+*-epo.fif.gz
+*.fif.gz

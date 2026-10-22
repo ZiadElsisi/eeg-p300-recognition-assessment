@@ -4,7 +4,7 @@
 # Pre-hardware Step 9 pipeline tests
 # ---------------------------------------------------------------------------
 
-"""Automated checks corresponding to pre-hardware guide UT-01–UT-07."""
+"""The eight main unit tests corresponding to pre-hardware guide UT-01–UT-08."""
 
 import sys
 from pathlib import Path
@@ -156,8 +156,9 @@ def test_ut07_fixed_seed_reproduces_grouped_splits_and_fold_metrics():
     assert first_metrics == second_metrics
 
 
-def test_ut08_loso_test_subject_is_excluded_from_training_and_tuning(monkeypatch):
+def test_ut08_loso_excludes_held_out_subject_and_reports_imbalance_metrics():
     from src.evaluation import loso
+    import pytest
 
     subjects = np.repeat([1, 2, 3], 8)
     X = np.column_stack([
@@ -186,11 +187,10 @@ def test_ut08_loso_test_subject_is_excluded_from_training_and_tuning(monkeypatch
 
     FitSpy.fitted_subject_sets = []
     FitSpy.predicted_subject_sets = []
-    monkeypatch.setattr(loso, "build_model", FitSpy)
-
-    results = loso.run_loso(X, y, subjects)
+    results = loso.run_loso(X, y, subjects, model_factory=FitSpy)
 
     assert len(results) == 3
+    assert {"roc_auc", "pr_auc", "balanced_accuracy"}.issubset(results.columns)
     assert len(FitSpy.fitted_subject_sets) == 3  # one fit per fold; no tuning fit
     assert len(FitSpy.predicted_subject_sets) == 3
     for held_out, train_seen, test_seen in zip(
@@ -201,3 +201,11 @@ def test_ut08_loso_test_subject_is_excluded_from_training_and_tuning(monkeypatch
         assert int(held_out) not in train_seen
         assert train_seen == set(subjects) - {int(held_out)}
         assert test_seen == {int(held_out)}
+
+    fold = loso.make_loso_folds(subjects)[0]
+    leaking_fold = dict(fold)
+    leaking_fold["train_idx"] = np.append(
+        fold["train_idx"], fold["test_idx"][0]
+    )
+    with pytest.raises(loso.LeakageError):
+        loso.assert_fold_integrity(leaking_fold, subjects)
