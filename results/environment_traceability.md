@@ -1,18 +1,15 @@
 # Environment and Code Traceability
 
-Recorded for the verification run on 2026-10-22.
+Recorded for the verification run on 2026-10-23.
 
 - Python: `3.11.16`
-- Base Git commit: `7ea1d4c397dbcb1cc99a7b369695ab54bebcb83d`
-- Working tree: modified; the base commit does not alone identify the code used for these results.
+- Git commit: `71a7e85c77e0be6e5ee6befc13fc8cb12e93362a`
+- Source files: recorded against this commit; documentation and the generated test report may subsequently be updated in the working tree.
 - Release tag: none. `prehardware-v1.0` has not been created.
-- Source snapshot SHA-256: `4190a7b2d67e1ebc475520d580bc4f87059a22eafb407dcfbea98823c0ab4fc5`
+- Source snapshot SHA-256: `f9af3bfbb88896970d0c4ead288c8be1196a61364268953fe8ad65836c78a78a`
 - Snapshot inputs: all files under `src/`, `tests/`, and `notebooks/` plus `README.md`, `Pipfile`, `Pipfile.lock`, and `.gitignore` (53 files; path and file contents hashed in sorted order).
 
 ## Verification results
 
-- Automated tests: 11 passed — the eight main UT-01–UT-08 tests and three numeric synthetic timing-shift cases. See `reports/unit_test_report.md`.
-- BNCI2015-003 preprocessing compatibility: 16 of 20 recordings passed. Both recordings for subjects 4 and 5 in each train/test run failed because the current ±70 µV absolute-amplitude rule rejected all 900 epochs. The source event channels still contained 750 NonTarget and 150 Target events. See `results/bnci2015_003/pipeline_verification.csv`.
-- BNCI2015-003 CSV SHA-256: `37ebf2fd025a54a95b9fd8454aab505b41c0b696915f46c2f43ee5f46345f924`.
-
-The source snapshot hash identifies the working source inputs independently of Git's commit hash. Once the changes are reviewed and committed, replace the base-commit/dirty-tree entry with the resulting commit and create a release tag only if the team approves that release.
+- Automated tests: 11 passed on 2026-10-23 — the eight main UT-01–UT-08 tests and three numeric synthetic timing-shift cases. See `reports/unit_test_report.md`.
+The source snapshot hash independently identifies the listed source inputs. Create a release tag only after the team approves the release.

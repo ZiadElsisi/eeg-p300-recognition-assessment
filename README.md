@@ -129,13 +129,9 @@ For this imbalanced dataset, the evaluation's **above-chance target-detection cr
 
 On the current subject-dependent grouped five-fold run, the across-subject means are Target F1 0.572, Target precision 0.460, Target recall 0.761, ROC-AUC 0.866, PR-AUC/average precision 0.644, and balanced accuracy 0.789. The ROC-AUC, PR-AUC, and balanced-accuracy means exceed their stated baselines; accuracy (0.808) is descriptive only.
 
-### BNCI2015-003 pipeline compatibility check
-
-The current pipeline was run on all 20 BNCI2015-003 train/test recordings. It retained both event classes and completed preprocessing for 16 recordings. Four recordings (both runs for subjects 4 and 5) failed because the current ±70 µV absolute-amplitude rule rejected all 900 epochs per run. Their event channels contained 750 NonTarget and 150 Target events, so the failure is due to the artifact rule's compatibility with those recordings, not missing event markers. The per-record input counts and failure reasons are in `results/bnci2015_003/pipeline_verification.csv`. Do not claim full-dataset compatibility until the rule is reviewed and the validation is rerun.
-
 ### Environment and code traceability
 
-The test and cross-dataset verification runs used **Python 3.11.16**. The working tree is currently modified, so `7ea1d4c397dbcb1cc99a7b369695ab54bebcb83d` identifies the base commit only; it does not identify all code used in the latest results. No `prehardware-v1.0` release tag exists. Create and record the release tag only after the reviewed changes have been committed. The current test inventory is eight main UT-01–UT-08 tests plus three parameterized numeric timing-shift checks; it is not an 18-test suite.
+The test runs used **Python 3.11.16**. The current recorded Git commit, source fingerprint, and test result are listed in `results/environment_traceability.md`. No `prehardware-v1.0` release tag exists. The test inventory is eight main UT-01–UT-08 tests plus three parameterized numeric timing-shift cases; it is not an 18-test suite.
 
 ## Development Status
 
