@@ -1,31 +1,30 @@
 from pathlib import Path
 import hashlib
 import json
-import mne
+import mne # an open-source Python library for exploring, visualizing, and analyzing human neurophysiological data
 import numpy as np
 from mne.io.constants import FIFF
 from src.loaders.bnci2014_008 import load_bnci2014_008
+from src.config import config
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-PREPROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "preprocessed"
-# The artifact threshold is configurable because the guide says to use the
-# "planned amplitude rule", but it does not define the numeric threshold.
+
+PROJECT_ROOT = config.PROJECT_ROOT
+PREPROCESSED_DATA_DIR = config.PREPROCESSED_DATA_DIR
+
+
 EVENT_CHANNEL = "Target stim"
-# BNCI2014-008 class codes in the MOABB loader:
-#   1 -> NonTarget
-#   2 -> Target
+
 EVENT_ID = {
     "NonTarget": 1,
     "Target": 2,
 }
 
-# Project-required band-pass.
+# Project-required band-pass Filter .
 L_FREQ = 0.1
 H_FREQ = 30.0
 
 # The public BNCI2014-008 distribution is already documented as having a
-# 50 Hz notch filter. We therefore keep the notch OFF by default to avoid
-# applying the same notch twice to an already filtered public signal.
+# 50 Hz notch filter. We therefore keep the notch OFF by default to avoid applying the same notch twice to an already filtered public signal.
 
 APPLY_NOTCH = False
 NOTCH_FREQ = 50.0
@@ -48,6 +47,7 @@ AMPLITUDE_DROP_REASON = "AMPLITUDE"
 TMIN = -0.2
 TMAX = 0.8
 
+
 EEG_CHANNELS = [
     "Fz",
     "Cz",
@@ -58,22 +58,6 @@ EEG_CHANNELS = [
     "PO7",
     "PO8",
 ]
-
-
-# def _print_event_counts(events: np.ndarray, event_id: dict) -> None:
-#     """Print Target/NonTarget counts in a readable way."""
-#     print("\n=== Event Verification ===")
-#
-#     for label, code in event_id.items():
-#         count = int(np.sum(events[:, 2] == code))
-#         print(f"[Record] {label}: {count}")
-#
-#     unexpected = sorted(set(np.unique(events[:, 2])) - set(event_id.values()))
-#     if unexpected:
-#         raise ValueError(
-#             f"Unexpected event codes found: {unexpected}. "
-#             "Check the event channel and dataset metadata."
-#         )
 
 
 def _verify_units(raw: mne.io.BaseRaw) -> None:
@@ -89,19 +73,13 @@ def _verify_units(raw: mne.io.BaseRaw) -> None:
     if not eeg_units:
         raise ValueError("No EEG channels were found.")
 
-    if any(unit != FIFF.FIFF_UNIT_V for unit in eeg_units):
-        raise ValueError(
-            "EEG channel units are not all volts (V). "
-            "Do not apply the artifact threshold until unit handling is verified."
-        )
+    for unit in eeg_units:
+        if unit != FIFF.FIFF_UNIT_V:
+            raise ValueError(
+                "EEG channel units are not all volts (V). "
+                "Do not apply the artifact threshold until unit handling is verified."
+            )
 
-    # print("\n=== Unit Verification ===")
-    # print("[Record] MNE EEG unit: volts (V)")
-    # print(
-    #     f"[Record] Artifact threshold: "
-    #     f"{ARTIFACT_THRESHOLD_UV:.1f} uV = "
-    #     f"{ARTIFACT_THRESHOLD_UV * 1e-6:.2e} V"
-    # )
 
 
 def _reject_by_absolute_amplitude(

@@ -3,6 +3,9 @@
 Recorded for the verification run on 2026-10-23.
 
 - Python: `3.11.16`
+- Dependency lock: `Pipfile.lock`; `pipenv verify` reports the lock is up to date with `Pipfile`.
+- Locked direct dependencies: NumPy `2.4.6`, SciPy `1.17.1`, pandas `3.0.6`, MNE `1.13.2`, scikit-learn `1.9.1`, Matplotlib `3.11.2`, MOABB `1.7.2`, and pytest `9.1.1` (development dependency).
+- `Pipfile.lock` SHA-256: `3af0a91b9d123f3ad2118d08396eaf604bab337b601b58a0909256e5047d2c0f`
 - Git commit: `71a7e85c77e0be6e5ee6befc13fc8cb12e93362a`
 - Source files: recorded against this commit; documentation and the generated test report may subsequently be updated in the working tree.
 - Release tag: none. `prehardware-v1.0` has not been created.
