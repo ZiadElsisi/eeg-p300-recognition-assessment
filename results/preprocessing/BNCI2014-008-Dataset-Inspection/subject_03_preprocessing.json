@@ -1,9 +1,8 @@
 {
   "configuration": {
     "artifact_rule": {
-      "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
-      "threshold_uv": 70.0,
-      "type": "absolute_amplitude"
+      "description": "No amplitude-based artifact rejection was applied.",
+      "type": "none"
     },
     "band_pass": {
       "filter_type": "Butterworth",
@@ -17,6 +16,19 @@
       -0.2,
       0.0
     ],
+    "counts": {
+      "amplitude_rejected_epochs": 0,
+      "amplitude_rejected_percent_of_input_events": 0.0,
+      "boundary_drops": 0,
+      "input_events": 4200,
+      "other_drops": 0,
+      "retained_by_class": {
+        "NonTarget": 3500,
+        "Target": 700
+      },
+      "retained_epochs": 4200,
+      "total_dropped": 0
+    },
     "eeg_channels": [
       "Fz",
       "Cz",
@@ -39,23 +51,22 @@
     "notch": {
       "applied": false,
       "frequency_hz": null
+    },
+    "saved_epochs": {
+      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_3_clean-epo.fif",
+      "sha256": "820287459d83e5512e3ac00cdb25d1806b26518daba14281c61983b230f9dd9f"
+    },
+    "verification": {
+      "actual_samples_per_epoch": 257,
+      "baseline_max_abs_mean_v": 2.0850041778567394e-20,
+      "expected_samples_per_epoch": 257,
+      "first_sample_time_seconds": -0.19921875,
+      "last_sample_time_seconds": 0.80078125,
+      "sampling_rate_hz": 256.0
     }
   },
-  "counts": {
-    "amplitude_rejected_epochs": 0,
-    "amplitude_rejected_percent_of_input_events": 0.0,
-    "boundary_drops": 0,
-    "input_events": 4200,
-    "other_drops": 0,
-    "retained_by_class": {
-      "NonTarget": 3500,
-      "Target": 700
-    },
-    "retained_epochs": 4200,
-    "total_dropped": 0
-  },
   "provenance": {
-    "preprocessing_source_sha256": "a22eb15e12b1d3b28b581e06e063f4562058625b5344538e4b5a35a19c778961",
+    "preprocessing_source_sha256": "9bc3eb9a610a5975698561c53ea409877c0fb82d8f39059730e6e5787099e39d",
     "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A03.mat",
     "raw_dataset_sha256": "820287459d83e5512e3ac00cdb25d1806b26518daba14281c61983b230f9dd9f"
   },
@@ -66,21 +77,9 @@
     "session_id": "0",
     "subject_id": 3
   },
-  "saved_epochs": {
-    "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_3_clean-epo.fif",
-    "sha256": "820287459d83e5512e3ac00cdb25d1806b26518daba14281c61983b230f9dd9f"
-  },
   "software": {
     "mne": "1.13.2",
     "numpy": "2.4.6"
   },
-  "status": "passed",
-  "verification": {
-    "actual_samples_per_epoch": 257,
-    "baseline_max_abs_mean_v": 2.0850041778567394e-20,
-    "expected_samples_per_epoch": 257,
-    "first_sample_time_seconds": -0.19921875,
-    "last_sample_time_seconds": 0.80078125,
-    "sampling_rate_hz": 256.0
-  }
+  "status": "passed"
 }
