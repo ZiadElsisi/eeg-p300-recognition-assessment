@@ -42,21 +42,20 @@
     }
   },
   "counts": {
-    "amplitude_rejected_epochs": 131,
-    "amplitude_rejected_percent_of_input_events": 3.119047619047619,
+    "amplitude_rejected_epochs": 0,
+    "amplitude_rejected_percent_of_input_events": 0.0,
     "boundary_drops": 0,
     "input_events": 4200,
     "other_drops": 0,
     "retained_by_class": {
-      "NonTarget": 3392,
-      "Target": 677
+      "NonTarget": 3500,
+      "Target": 700
     },
-    "retained_epochs": 4069,
-    "total_dropped": 131
+    "retained_epochs": 4200,
+    "total_dropped": 0
   },
   "provenance": {
-    "preprocessing_source": "src/preprocessing/pipeline.py",
-    "preprocessing_source_sha256": "935340225a4620b7fbdeeccdce8d3ce720b4717a64b04069d852bc2fdcbc41bc",
+    "preprocessing_source_sha256": "a22eb15e12b1d3b28b581e06e063f4562058625b5344538e4b5a35a19c778961",
     "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A02.mat",
     "raw_dataset_sha256": "0023ee04e4a113231c125bcfdf59780ed95d858a5e5c0bc993701eb6c9652894"
   },
@@ -69,7 +68,7 @@
   },
   "saved_epochs": {
     "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_2_clean-epo.fif",
-    "sha256": "1dee37a68854acf7a116a22de2ff22584e51cf1504d854a742fbf0e98582d868"
+    "sha256": "0023ee04e4a113231c125bcfdf59780ed95d858a5e5c0bc993701eb6c9652894"
   },
   "software": {
     "mne": "1.13.2",
@@ -78,7 +77,7 @@
   "status": "passed",
   "verification": {
     "actual_samples_per_epoch": 257,
-    "baseline_max_abs_mean_v": 7.753609286404749e-21,
+    "baseline_max_abs_mean_v": 1.0034082605935558e-20,
     "expected_samples_per_epoch": 257,
     "first_sample_time_seconds": -0.19921875,
     "last_sample_time_seconds": 0.80078125,
