@@ -324,7 +324,7 @@ def preprocess_eeg(
         event_id=event_id,
         tmin=TMIN,
         tmax=TMAX,
-        baseline=(TMIN, 0.0),
+        # baseline=(TMIN, 0.0),
         reject=None,
         reject_by_annotation=True,
         preload=True,
@@ -405,7 +405,7 @@ def preprocess_eeg(
 
 
     # --------------------------------------------------------
-    # 5. SAVE CLEAN EPOCHS
+    # 5. SAVE CLEAN EPOCHS + Reporting
     # --------------------------------------------------------
 
     if output_path is not None:
