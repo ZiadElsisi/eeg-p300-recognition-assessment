@@ -53,12 +53,12 @@
       "frequency_hz": null
     },
     "saved_epochs": {
-      "path": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/preprocessed/subject_8_clean-epo.fif",
+      "path": "D:\\ASU\\GRADUATION PROJECT\\eeg-p300-recognition-assessment\\data\\preprocessed\\subject_8_clean-epo.fif",
       "sha256": "7b5d249058dcac4ad477ea8591256d51c19df384551eba82b6c88e3ae6333571"
     },
     "verification": {
       "actual_samples_per_epoch": 257,
-      "baseline_max_abs_mean_v": 4.039695594597432e-21,
+      "baseline_max_abs_mean_v": 3.518444550133248e-21,
       "expected_samples_per_epoch": 257,
       "first_sample_time_seconds": -0.19921875,
       "last_sample_time_seconds": 0.80078125,
@@ -66,13 +66,13 @@
     }
   },
   "provenance": {
-    "preprocessing_source_sha256": "9bc3eb9a610a5975698561c53ea409877c0fb82d8f39059730e6e5787099e39d",
-    "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A08.mat",
+    "preprocessing_source_sha256": "a0018378f9cf634e491fa33cdc0f2619808784f3ba8d94f59133b69ee0c56a24",
+    "raw_dataset_file": "D:\\ASU\\GRADUATION PROJECT\\eeg-p300-recognition-assessment\\data\\moabb\\MNE-bnci-data\\~bci\\database\\008-2014\\A08.mat",
     "raw_dataset_sha256": "7b5d249058dcac4ad477ea8591256d51c19df384551eba82b6c88e3ae6333571"
   },
   "run": {
     "dataset": "BNCI2014-008",
-    "raw_dataset_file": "/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/data/moabb/MNE-bnci-data/~bci/database/008-2014/A08.mat",
+    "raw_dataset_file": "D:\\ASU\\GRADUATION PROJECT\\eeg-p300-recognition-assessment\\data\\moabb\\MNE-bnci-data\\~bci\\database\\008-2014\\A08.mat",
     "run_id": "0",
     "session_id": "0",
     "subject_id": 8
