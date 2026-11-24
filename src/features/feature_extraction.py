@@ -1,13 +1,8 @@
 import mne
 import numpy as np
 import pandas as pd
-from src.preprocessing.pipeline import preprocess_eeg,PREPROCESSED_DATA_DIR
-from src.loaders.bnci2014_008 import load_bnci2014_008
-from pathlib import Path
-import json
 from mne.preprocessing import Xdawn
 
-# FEATURE ENGINEERING TECHNIQUES METHODS AND CLASSES
 def automatic_feature_window_construction(epochs:mne.Epochs,offset:int=3,threshold:float=0.8)->list:#
     """
     Constructs adaptive feature windows by comparing the spatial
