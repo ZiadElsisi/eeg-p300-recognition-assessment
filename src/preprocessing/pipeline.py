@@ -1,64 +1,57 @@
 from pathlib import Path
-import hashlib
+import sys
 import json
+import logging
 import mne # an open-source Python library for exploring, visualizing, and analyzing human neurophysiological data
 import numpy as np
 from mne.io.constants import FIFF
 from src.loaders.bnci2014_008 import load_bnci2014_008
-from src.config import config
+from src.Utility import config
+from src.preprocessing.Preprocessing_Setting import (
+ EVENT_CHANNEL,
+ EVENT_ID,
+ EEG_CHANNELS,
+ L_FREQ,
+ H_FREQ,
+ APPLY_NOTCH,
+ NOTCH_FREQ,
+ TMIN,
+ TMAX,
+ AMPLITUDE_DROP_REASON,
+)
+from src.Reporting import preprocessing_report
 
+# ============================================================
+# LOGGER CONFIGURATION
+# ============================================================
+
+# Configure a dedicated logger for this preprocessing module.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+if not logger.handlers:
+    console_handler = logging.StreamHandler(sys.stdout) ## Stream Handler For Logging Inside Cosole
+    console_handler.setFormatter(
+        logging.Formatter(
+            fmt="%(asctime)s | %(levelname)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    logger.addHandler(console_handler)
+
+logger.propagate = False
+
+
+# ============================================================
+# Configuration
+# ============================================================
 
 PROJECT_ROOT = config.PROJECT_ROOT
 PREPROCESSED_DATA_DIR = config.PREPROCESSED_DATA_DIR
 
-
-EVENT_CHANNEL = "Target stim"
-
-EVENT_ID = {
-    "NonTarget": 1,
-    "Target": 2,
-}
-
-# Project-required band-pass Filter .
-L_FREQ = 0.1
-H_FREQ = 30.0
-
-# The public BNCI2014-008 distribution is already documented as having a
-# 50 Hz notch filter. We therefore keep the notch OFF by default to avoid applying the same notch twice to an already filtered public signal.
-
-APPLY_NOTCH = False
-NOTCH_FREQ = 50.0
-
-# Absolute-amplitude artifact rule:
-# an epoch is rejected if ANY EEG channel goes above +ARTIFACT_THRESHOLD_UV
-# or below -ARTIFACT_THRESHOLD_UV at ANY sample inside the epoch
-# (checked after filtering and baseline correction).
-# NOTE: this is NOT MNE's peak-to-peak "reject" criterion, so it is
-# implemented manually in _reject_by_absolute_amplitude().
-# IMPORTANT:
-# 70 uV is a configurable project value used in this implementation.
-# It is NOT a numeric requirement stated in the supplied execution guide.
-ARTIFACT_THRESHOLD_UV = 70.0
-
-# Label written to epochs.drop_log for amplitude-rejected epochs.
-AMPLITUDE_DROP_REASON = "AMPLITUDE"
-
-# Requested project epoch window.
-TMIN = -0.2
-TMAX = 0.8
-
-
-EEG_CHANNELS = [
-    "Fz",
-    "Cz",
-    "Pz",
-    "Oz",
-    "P3",
-    "P4",
-    "PO7",
-    "PO8",
-]
-
+# ============================================================
+# UNIT VERIFICATION
+# ============================================================
 
 def _verify_units(raw: mne.io.BaseRaw) -> None:
     """
@@ -67,8 +60,8 @@ def _verify_units(raw: mne.io.BaseRaw) -> None:
     MOABB converts BNCI2014-008 source values from microvolts (uV) to
     volts (V) before creating the MNE Raw object.
     """
-    eeg_picks = mne.pick_types(raw.info, eeg=True, stim=False)
-    eeg_units = [raw.info["chs"][idx]["unit"] for idx in eeg_picks]
+    eeg_picks = mne.pick_types(raw.info, eeg=True, stim=False) ## return array of indices ex: [0,2,3]
+    eeg_units = [raw.info["chs"][idx]["unit"] for idx in eeg_picks]## return array of units
 
     if not eeg_units:
         raise ValueError("No EEG channels were found.")
@@ -82,43 +75,37 @@ def _verify_units(raw: mne.io.BaseRaw) -> None:
 
 
 
-def _reject_by_absolute_amplitude(
-    epochs: mne.Epochs,
-    eeg_channel_names: list[str],
-    threshold_uv: float,
-) -> int:
+# ============================================================
+# Artifact Rejection
+# ============================================================
+
+def _reject_by_absolute_amplitude(epochs: mne.Epochs, threshold_uv: float) -> int:
+    """Drop epochs where any EEG channel exceeds +/- threshold_uv at any sample.
+
+    Unlike MNE's `reject` (peak-to-peak), this checks absolute amplitude.
+    Run it on preloaded, baseline-corrected epochs. Returns the drop count.
     """
-    Drop epochs whose EEG amplitude exceeds +threshold_uv or falls below
-    -threshold_uv on any EEG channel at any sample.
-
-    This is an absolute-amplitude rule (value > +T or value < -T), unlike
-    MNE's built-in "reject", which is a peak-to-peak criterion.
-
-    Must be called on preloaded, baseline-corrected epochs. Dropped epochs
-    are recorded in epochs.drop_log with AMPLITUDE_DROP_REASON.
-
-    Returns the number of epochs dropped.
-    """
-    threshold_v = threshold_uv * 1e-6
-
-    # Shape: epochs x EEG_channels x samples (in volts)
-    eeg_data = epochs.get_data(picks=eeg_channel_names)
-
-    if eeg_data.shape[0] == 0:
+    if len(epochs) == 0:
         return 0
 
-    # Max |amplitude| per epoch across all channels and samples.
-    max_abs_per_epoch = np.abs(eeg_data).max(axis=(1, 2))
-    bad_idx = np.where(max_abs_per_epoch > threshold_v)[0]
+    threshold_v = threshold_uv * 1e-6  # units were verified to be volts
+    data = epochs.get_data(picks=EEG_CHANNELS)  # (epochs, channels, samples)
 
-    if len(bad_idx) > 0:
-        epochs.drop(bad_idx, reason=AMPLITUDE_DROP_REASON)
+    peak_per_epoch = np.abs(data).max(axis=(1, 2))
+    bad_epoch_indices = np.flatnonzero(peak_per_epoch > threshold_v)
 
-    return int(len(bad_idx))
+    if bad_epoch_indices.size > 0:
+        epochs.drop(bad_epoch_indices, reason=AMPLITUDE_DROP_REASON)
 
+    return int(bad_epoch_indices.size)
+
+
+# ============================================================
+# COUNT ARTIFACT REJECTIONS
+# ============================================================
 
 def _count_artifact_rejections(
-    epochs: mne.Epochs, eeg_channel_names: list[str]
+    epochs: mne.Epochs
 ) -> tuple[int, int, int]:
     """
     Separate MNE epoch drops into artifact, boundary, and other drops.
@@ -128,7 +115,6 @@ def _count_artifact_rejections(
     channel names (MNE's own reject) are also counted as artifacts.
     Boundary-related events are reported separately.
     """
-    eeg_names = set(eeg_channel_names)
 
     artifact_drops = 0
     boundary_drops = 0
@@ -138,9 +124,7 @@ def _count_artifact_rejections(
         if not drop_reasons:
             continue
 
-        if AMPLITUDE_DROP_REASON in drop_reasons or any(
-            reason in eeg_names for reason in drop_reasons
-        ):
+        if AMPLITUDE_DROP_REASON in drop_reasons :
             artifact_drops += 1
         elif "TOO_SHORT" in drop_reasons:
             boundary_drops += 1
@@ -149,6 +133,10 @@ def _count_artifact_rejections(
 
     return artifact_drops, boundary_drops, other_drops
 
+
+# ============================================================
+# BASELINE VERIFICATION
+# ============================================================
 
 def _verify_baseline(epochs: mne.Epochs) -> float:
     """
@@ -160,7 +148,7 @@ def _verify_baseline(epochs: mne.Epochs) -> float:
     """
     baseline_mask = (epochs.times >= TMIN - 1e-12) & (
         epochs.times <= 0.0 + 1e-12
-    )
+    ) ## the +- 1e-12 is a safe margin
 
     if not np.any(baseline_mask):
         raise ValueError("No samples were found in the baseline interval.")
@@ -172,10 +160,9 @@ def _verify_baseline(epochs: mne.Epochs) -> float:
     baseline_means = baseline_data.mean(axis=2)
     max_abs_baseline = float(np.max(np.abs(baseline_means)))
 
-    print("\n=== Baseline Verification ===")
-    print(
-        "[Record] Maximum absolute baseline mean across "
-        f"EEG epoch/channel: {max_abs_baseline:.3e} V"
+    logger.info(
+        "Baseline verification | Maximum absolute baseline mean: %.3e V",
+        max_abs_baseline,
     )
 
     # Numerical sanity check. The exact value should be very close to zero
@@ -188,17 +175,21 @@ def _verify_baseline(epochs: mne.Epochs) -> float:
 
     return max_abs_baseline
 
+# ============================================================
+# MAIN PREPROCESSING FUNCTION
+# ============================================================
+
 
 def preprocess_eeg(
     raw: mne.io.BaseRaw,
     event_channel: str = EVENT_CHANNEL,
     event_id: dict | None = None,
-    artifact_threshold_uv: float = ARTIFACT_THRESHOLD_UV,
+    artifact_threshold_uv: float | None = None,
     apply_notch: bool = APPLY_NOTCH,
     output_path: str | Path | None = None,
     report_path: str | Path | None = None,
     report_metadata: dict | None = None,
-) -> mne.Epochs:
+) -> mne.BaseEpochs:
     """
     Build the preprocessing pipeline for one continuous EEG run.
 
@@ -208,9 +199,11 @@ def preprocess_eeg(
             -> filtering
             -> epoching
             -> baseline correction
-            -> artifact rejection
-            -> save clean epochs
+            -> optional artifact rejection
+            -> verification
+            -> save clean epochs and report
     """
+
     if event_id is None:
         event_id = EVENT_ID.copy()
 
@@ -223,8 +216,11 @@ def preprocess_eeg(
     # Work on a copy so the original dataset object remains untouched.
     raw_copy = raw.copy()
 
+
+    # --------------------------------------------------------
     # 1. Channel selection
-    print("\n[1] Selecting EEG + event channels...")
+    # --------------------------------------------------------
+    logger.info("Step 1/5: Selecting EEG and event channels.")
 
     missing_eeg = [ch for ch in EEG_CHANNELS if ch not in raw_copy.ch_names]
     if missing_eeg:
@@ -238,18 +234,17 @@ def preprocess_eeg(
     # only. This also keeps stimulus codes out of ERP Analysis amplitude checks.
     raw_copy.pick(picks=EEG_CHANNELS + [event_channel])
 
-    print(f"[Record] EEG channels ({len(EEG_CHANNELS)}): {EEG_CHANNELS}")
-    print(f"[Record] Event channel: {event_channel}")
+    logger.info("Selected %d EEG channels: %s", len(EEG_CHANNELS), EEG_CHANNELS)
+    logger.info("Event channel: %s", event_channel)
 
     # ------------------------------------------------------------------
     # 2. Event extraction
     # ------------------------------------------------------------------
-    print("\n[2] Extracting Target/NonTarget events...")
+    logger.info("Step 2/5: Extracting Target/NonTarget events.")
 
     # IMPORTANT:
     # "Target stim" stores the class code (1/2).
-    # "Flash stim" stores which row/column was flashed and is NOT the
-    # Target/NonTarget class channel.
+    # "Flash stim" stores which row/column was flashed and is NOT the Target/NonTarget class channel.
     events = mne.find_events(
         raw_copy,
         stim_channel=event_channel,
@@ -257,7 +252,6 @@ def preprocess_eeg(
         verbose=False,
     )
 
-    # print(events, event_id)
 
     # After extracting events, keep physiological EEG only.
     raw_eeg = raw_copy.copy().pick(picks=EEG_CHANNELS)
@@ -265,8 +259,11 @@ def preprocess_eeg(
     #  Unit verification
     _verify_units(raw_eeg)
 
-    # Filtering
-    print("\n[3] Filtering pipeline...")
+    # --------------------------------------------------------
+    # 3. FILTERING
+    # --------------------------------------------------------
+
+    logger.info("Step 3/5: Applying EEG filters.")
 
     if apply_notch:
         raw_eeg.notch_filter(
@@ -274,11 +271,12 @@ def preprocess_eeg(
             method="fir",
             verbose=False,
         )
-        print(f"[Record] 50 Hz notch: APPLIED")
+        logger.info("%.1f Hz notch filter applied.", NOTCH_FREQ)
     else:
-        print(
-            "[Record] 50 Hz notch: NOT APPLIED "
-            "(dataset is already documented as 50 Hz notch-filtered)"
+        logger.info(
+            "%.1f Hz notch filter not applied; the dataset is already "
+            "documented as notch-filtered.",
+            NOTCH_FREQ,
         )
 
     # The project guide requires a 0.1-30 Hz band-pass.
@@ -297,14 +295,20 @@ def preprocess_eeg(
         verbose=False,
     )
 
-    print("[Record] Band-pass: 0.1-30 Hz")
-    print("[Record] Filter: 4th-order Butterworth IIR, zero-phase")
+    logger.info(
+        "Band-pass filter applied: %.1f-%.1f Hz, 4th-order Butterworth IIR, "
+        "zero-phase.",
+        L_FREQ,
+        H_FREQ,
+    )
 
-    # 5. Epoching + baseline correction + artifact rejection
 
-    print(
-        "\n[4] Epoching, baseline correction, "
-        "and artifact rejection..."
+    # --------------------------------------------------------
+    # 4. EPOCHING + BASELINE + artifact rejection (if given threshold)
+    # -------------------------------------------------------
+
+    logger.info(
+        "Step 4/5: Epoching and baseline correction"
     )
 
     # MNE aligns requested times to the discrete sample grid.
@@ -320,53 +324,48 @@ def preprocess_eeg(
         event_id=event_id,
         tmin=TMIN,
         tmax=TMAX,
-        baseline=(TMIN, 0.0),
+        # baseline=(TMIN, 0.0),
         reject=None,
         reject_by_annotation=True,
         preload=True,
         verbose=False,
     )
-
-    # Absolute-amplitude artifact rejection (+/- threshold, in uV).
-    # Runs on baseline-corrected data, before the verification records.
-    n_amplitude_rejected = _reject_by_absolute_amplitude(
-        epochs,
-        EEG_CHANNELS,
-        artifact_threshold_uv,
-    )
-    print(
-        f"[Record] Absolute-amplitude rule: reject if any EEG sample is "
-        f"> +{artifact_threshold_uv:.1f} uV or < -{artifact_threshold_uv:.1f} uV"
-    )
-    print(f"[Record] Epochs dropped by amplitude rule: {n_amplitude_rejected}")
+    n_amplitude_rejected = 0
+    if artifact_threshold_uv is not None:
+        n_amplitude_rejected = _reject_by_absolute_amplitude(
+            epochs, artifact_threshold_uv
+        )
+        logger.info(
+            "Absolute-amplitude rule (+/- %.1f uV) dropped %d epochs.",
+            artifact_threshold_uv,
+            n_amplitude_rejected,
+        )
+    else:
+        logger.info("No artifact rejection applied (artifact_threshold_uv=None).")
 
     if len(epochs) == 0:
-        input_class_counts = {
-            label: int(np.sum(events[:, 2] == code))
-            for label, code in event_id.items()
-        }
         raise ValueError(
-            "No epochs remain after preprocessing. "
-            f"Input event counts were {input_class_counts}; "
-            f"the absolute-amplitude rule rejected {n_amplitude_rejected} "
-            f"epochs at +/-{artifact_threshold_uv:.1f} uV. "
-            "Review this dataset's amplitude distribution and the artifact "
-            "threshold before using it for evaluation."
+            f"No epochs remain from {len(events)} events "
+            f"({n_amplitude_rejected} removed by amplitude rule)."
         )
 
-    # Verification records required by the Task 3 guide
-    print("\n=== Task 3 Verification Records ===")
+
+
+    # --------------------------------------------------------
+    # VERIFICATION RECORDS
+    # --------------------------------------------------------
+    logger.info("Verification records:")
 
     sfreq = float(raw_filtered.info["sfreq"])
     expected_samples = round((TMAX - TMIN) * sfreq) + 1
     actual_samples = len(epochs.times)
 
-    print(f"[Record] Sampling rate: {sfreq:.1f} Hz")
-    print(f"[Record] Requested epoch: {TMIN:.3f} to {TMAX:.3f} s")
-    print(f"[Record] Expected samples/epoch: {expected_samples}")
-    print(f"[Record] Actual samples/epoch: {actual_samples}")
-    print(f"[Record] First sample time: {epochs.times[0]:.9f} s")
-    print(f"[Record] Last sample time: {epochs.times[-1]:.9f} s")
+    logger.info("Sampling rate: %.1f Hz", sfreq)
+    logger.info("Requested epoch: %.3f to %.3f s", TMIN, TMAX)
+    logger.info("Expected samples per epoch: %d", expected_samples)
+    logger.info("Actual samples per epoch: %d", actual_samples)
+    logger.info("First sample time: %.9f s", epochs.times[0])
+    logger.info("Last sample time: %.9f s", epochs.times[-1])
 
     if actual_samples != expected_samples:
         raise ValueError("Epoch sample-count verification failed.")
@@ -374,7 +373,7 @@ def preprocess_eeg(
     baseline_max_abs_mean_v = _verify_baseline(epochs)
 
     artifact_drops, boundary_drops, other_drops = (
-        _count_artifact_rejections(epochs, EEG_CHANNELS)
+        _count_artifact_rejections(epochs)
     )
 
     total_events = len(events)
@@ -386,174 +385,85 @@ def preprocess_eeg(
         if total_events else 0.0
     )
 
-    print(f"[Record] Input events: {total_events}")
-    print(f"[Record] Retained epochs: {retained_epochs}")
-    print(f"[Record] Total dropped during epoching: {total_drops}")
-    print(
-        f"[Record] Amplitude-rejected epochs: "
-        f"{artifact_drops} ({artifact_pct:.2f}%)"
+    logger.info("Input events: %d", total_events)
+    logger.info("Retained epochs: %d", retained_epochs)
+    logger.info("Total dropped epochs: %d", total_drops)
+    logger.info(
+        "Amplitude-rejected epochs: %d (%.2f%%)",
+        artifact_drops,
+        artifact_pct,
     )
-    print(f"[Record] Boundary drops: {boundary_drops}")
-    print(f"[Record] Other drops: {other_drops}")
+    logger.info("Boundary drops: %d", boundary_drops)
+    logger.info("Other drops: %d", other_drops)
 
     # Class balance after preprocessing is useful for Task 4 and beyond.
-    print("\n=== Class Counts After Preprocessing ===")
+    logger.info("Class counts after preprocessing:")
     for label, code in event_id.items():
         count = int(np.sum(epochs.events[:, 2] == code))
-        print(f"[Record] {label}: {count}")
+        logger.info("%s: %d", label, count)
 
-    # 6. Save clean epochs
+
+
+    # --------------------------------------------------------
+    # 5. SAVE CLEAN EPOCHS + Reporting
+    # --------------------------------------------------------
+
     if output_path is not None:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         epochs.save(output_path, overwrite=True)
-        print(f"\n[5] Clean epochs saved to: {output_path}")
+        logger.info("Step 5/5: Clean epochs saved to: %s", output_path)
     else:
-        print(
-            "\n[5] Clean epochs were not saved "
-            "(output_path=None)."
+        logger.info(
+            "Step 5/5: Clean epochs were not saved (output_path=None)."
         )
 
     if report_path is not None:
-        report_path = Path(report_path)
-        report_path.parent.mkdir(parents=True, exist_ok=True)
-
-        def sha256_file(path: Path) -> str:
-            digest = hashlib.sha256()
-            with path.open("rb") as stream:
-                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                    digest.update(chunk)
-            return digest.hexdigest()
-
         class_counts = {
             label: int(np.sum(epochs.events[:, 2] == code))
             for label, code in event_id.items()
         }
-        report = {
-            "status": "passed",
-            "run": report_metadata or {},
-            "provenance": {
-                "preprocessing_source": str(Path(__file__).resolve().relative_to(PROJECT_ROOT)),
-                "preprocessing_source_sha256": sha256_file(Path(__file__).resolve()),
-                "raw_dataset_file": (report_metadata or {}).get("raw_dataset_file"),
-                "raw_dataset_sha256": (
-                    sha256_file(Path((report_metadata or {})["raw_dataset_file"]))
-                    if (report_metadata or {}).get("raw_dataset_file")
-                    and Path((report_metadata or {})["raw_dataset_file"]).exists()
-                    else None
-                ),
-            },
-            "software": {
-                "mne": mne.__version__,
-                "numpy": np.__version__,
-            },
-            "configuration": {
-                "eeg_channels": EEG_CHANNELS,
-                "event_channel": event_channel,
-                "event_id": event_id,
-                "band_pass": {
-                    "low_hz": L_FREQ,
-                    "high_hz": H_FREQ,
-                    "method": "IIR",
-                    "filter_type": "Butterworth",
-                    "order": 4,
-                    "phase": "zero",
-                },
-                "notch": {
-                    "applied": bool(apply_notch),
-                    "frequency_hz": NOTCH_FREQ if apply_notch else None,
-                },
-                "epoch_window_seconds": [TMIN, TMAX],
-                "baseline_seconds": [TMIN, 0.0],
-                "artifact_rule": {
-                    "type": "absolute_amplitude",
-                    "threshold_uv": float(artifact_threshold_uv),
-                    "description": "Reject if any EEG sample on any selected channel exceeds +/- threshold after baseline correction.",
-                },
-            },
-            "verification": {
-                "sampling_rate_hz": sfreq,
-                "expected_samples_per_epoch": expected_samples,
-                "actual_samples_per_epoch": actual_samples,
-                "first_sample_time_seconds": float(epochs.times[0]),
-                "last_sample_time_seconds": float(epochs.times[-1]),
-                "baseline_max_abs_mean_v": baseline_max_abs_mean_v,
-            },
-            "counts": {
-                "input_events": int(total_events),
-                "retained_epochs": int(retained_epochs),
-                "total_dropped": int(total_drops),
-                "amplitude_rejected_epochs": int(artifact_drops),
-                "amplitude_rejected_percent_of_input_events": float(artifact_pct),
-                "boundary_drops": int(boundary_drops),
-                "other_drops": int(other_drops),
-                "retained_by_class": class_counts,
-            },
-            "saved_epochs": {
-                "path": str(output_path) if output_path is not None else None,
-                "sha256": (
-                    sha256_file(output_path)
-                    if output_path is not None and output_path.exists()
-                    else None
-                ),
-            },
+        counts = {
+            "input_events": int(total_events),
+            "retained_epochs": int(retained_epochs),
+            "total_dropped": int(total_drops),
+            "amplitude_rejected_epochs": int(artifact_drops),
+            "amplitude_rejected_percent_of_input_events": float(artifact_pct),
+            "boundary_drops": int(boundary_drops),
+            "other_drops": int(other_drops),
+            "retained_by_class": class_counts,
         }
-        report_path.write_text(
-            json.dumps(report, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+        preprocessing_report.save_report(
+            report_path, epochs, counts, event_id, event_channel,
+            apply_notch, artifact_threshold_uv,sfreq,
+            expected_samples, actual_samples, baseline_max_abs_mean_v,
+            output_path, report_metadata,logger
         )
-        print(f"[Record] Preprocessing report saved to: {report_path}")
-
-    print("\n preprocessing finished successfully.")
-
+    logger.info("Preprocessing finished successfully.")
     return epochs
 
 
-# def load_bnci_subject(subject_id: int = 1) -> mne.io.BaseRaw:
-#     """Load one BNCI2014-008 subject/run through MOABB."""
-#     dataset = BNCI2014_008()
-#     sessions = dataset.get_data(subjects=[subject_id])
-#
-#     session_id = next(iter(sessions[subject_id]))
-#     run_id = next(iter(sessions[subject_id][session_id]))
-#     raw = sessions[subject_id][session_id][run_id]
-#
-#     # print("\n=== Dataset Sanity Check ===")
-#     # print(f"[Record] Subject: {subject_id}")
-#     # print(f"[Record] Session: {session_id}")
-#     # print(f"[Record] Run: {run_id}")
-#     # print(f"[Record] Sampling rate: {raw.info['sfreq']} Hz")
-#     # print(f"[Record] Channels: {raw.ch_names}")
-#
-#     return raw
-
-
 if __name__ == "__main__":
-    print("=== Step 3: BNCI2014-008 Preprocessing Test ===")
+    logger.info("Starting BNCI2014-008 preprocessing test.")
     report_dir = PROJECT_ROOT / "results" / "preprocessing" / "BNCI2014-008-Dataset-Inspection"
     report_dir.mkdir(parents=True, exist_ok=True)
+
     report_records = []
-    subjects = range(1, 9)  # BNCI2014-008 has subjects 1-8
 
-    for subject_id in subjects:
-        dataset, raw_data = load_bnci2014_008(subjects=[subject_id])
-
+    for subject_id in range(1, 9):
+        _, raw_data = load_bnci2014_008(subjects=[subject_id])
+        ## The data we capture is the datat from one cause the dataset has one run per subject
         session_id = next(iter(raw_data[subject_id]))
         run_id = next(iter(raw_data[subject_id][session_id]))
-
         raw = raw_data[subject_id][session_id][run_id]
 
         report_path = report_dir / f"subject_{subject_id:02d}_preprocessing.json"
+
         raw_dataset_file = (
-            PROJECT_ROOT
-            / "data"
-            / "moabb"
-            / "MNE-bnci-data"
-            / "~bci"
-            / "database"
-            / "008-2014"
-            / f"A{subject_id:02d}.mat"
+                PROJECT_ROOT / "data" / "moabb" / "MNE-bnci-data"
+                / "~bci" / "database" / "008-2014" / f"A{subject_id:02d}.mat"
         )
+
         epochs = preprocess_eeg(
             raw,
             output_path=PREPROCESSED_DATA_DIR / f"subject_{subject_id}_clean-epo.fif",
@@ -567,18 +477,21 @@ if __name__ == "__main__":
             },
         )
 
-        report_records.append(json.loads(report_path.read_text(encoding="utf-8")))
+        report_records.append(
+            json.loads(report_path.read_text(encoding="utf-8"))
+        )
 
-        print(
-            f"Subject {subject_id:02d}: "
-            f"{len(epochs)} epochs"
+        logger.info(
+            "Subject %02d completed: %d retained epochs.",
+            subject_id,
+            len(epochs),
         )
 
     summary_path = report_dir / "preprocessing_summary.json"
+
     summary_path.write_text(
-        json.dumps(report_records, indent=2, sort_keys=True) + "\n",
+        json.dumps(report_records, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    print(f"\nPreprocessing summary saved to: {summary_path}")
 
-    # print(f"\nFinal Epochs shape: {final_epochs.get_data().shape}")
+    logger.info("Preprocessing summary saved to: %s", summary_path)

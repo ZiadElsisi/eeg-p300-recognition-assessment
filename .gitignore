@@ -21,6 +21,9 @@ venv/
 /data/*
 !/data/.gitkeep
 !/data/train_test_split
+/results/*
+/figures/*
+
 
 # Epoch exports (including compressed MNE files)
 *-epo.fif

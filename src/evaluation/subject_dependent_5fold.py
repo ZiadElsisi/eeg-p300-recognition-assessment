@@ -1,5 +1,4 @@
 from pathlib import Path
-from scipy.io import loadmat
 import hashlib
 import numpy as np
 import pandas as pd
@@ -11,7 +10,8 @@ import sklearn
 
 from sklearn.model_selection import StratifiedGroupKFold
 import src.features.feature_extraction as ext
-from src.features.feature_extraction import feature_extraction
+from src.validation.block_split import make_block_splits
+from src.preprocessing.threshold_rejection import ArtifactRejection
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -112,6 +112,49 @@ def evaluate_fold(X, y, train_idx, test_idx):
     return fold_result, confusion
 
 
+def evaluate_epoch_fold(epochs, y, train_idx, test_idx):
+    """Fit rejection, feature extraction, and LDA using one fold's training data."""
+    train_epochs = epochs[train_idx]
+    test_epochs = epochs[test_idx]
+
+    # Learn rejection parameters from training data only, then apply them to
+    # both sides. Read labels from the returned Epochs so dropped trials stay
+    # aligned with their corresponding feature rows.
+    artifact_rejection = ArtifactRejection(method="autoreject", random_state=SEED)
+    artifact_rejection.fit(train_epochs)
+    train_epochs, _ = artifact_rejection.transform(train_epochs)
+    test_epochs, _ = artifact_rejection.transform(test_epochs)
+    if len(train_epochs) == 0 or len(test_epochs) == 0:
+        raise ValueError("Artifact rejection removed every epoch in a fold partition.")
+
+    feature_extractor = ext.FeatureExtraction()
+    X_train = feature_extractor.fit_transform(train_epochs)
+    X_test = feature_extractor.transform(test_epochs)
+    y_train = train_epochs.events[:, 2]
+    y_test = test_epochs.events[:, 2]
+
+    model = Pipeline([
+        ("scaler", StandardScaler()),
+        ("classifier", LinearDiscriminantAnalysis(priors=[0.5, 0.5])),
+    ])
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    target_column = np.flatnonzero(model.classes_ == 2)[0]
+    y_prob = model.predict_proba(X_test)[:, target_column]
+
+    fold_result = {
+        "accuracy": accuracy_score(y_test, y_pred),
+        "precision": precision_score(y_test, y_pred, pos_label=2, zero_division=0),
+        "recall": recall_score(y_test, y_pred, pos_label=2, zero_division=0),
+        "f1": f1_score(y_test, y_pred, pos_label=2, zero_division=0),
+        "roc_auc": roc_auc_score(y_test == 2, y_prob),
+        "pr_auc": average_precision_score(y_test == 2, y_prob),
+        "balanced_accuracy": balanced_accuracy_score(y_test, y_pred),
+    }
+    confusion = confusion_matrix(y_test, y_pred, labels=[1, 2])
+    return fold_result, confusion, X_train.shape[1]
+
+
 def sha256_file(path):
     """Return a stable fingerprint for an input file used by this run."""
     digest = hashlib.sha256()
@@ -134,21 +177,13 @@ def lda_pipeline_subject_dependent_5fold_evaluation(SUBJECT_ID):
         preload=True,
         verbose=False
     )
-    # Reuse the team's feature extraction: 128 features per epoch.
-    X = feature_extraction(epochs)
-    print("Feature matrix shape:", X.shape)
-
     # ------------------------------------------------------------
     # get epochs' LABELS DATAFRAME for each subject.
     # ------------------------------------------------------------
     # True labels: 1 = NonTarget, 2 = Target.
     y = epochs.events[:, 2]
 
-    # ------------------------------------------------------------
-    # Read trial boundaries (trial's 'starting sample' number) from the original dataset.
-    # ex.: trial 1 start from sample 100, trial 2 start from sample 300 then sample 150 belong to trial 1.
-    # ------------------------------------------------------------
-    # trials obtained from raw data
+    # The validation module reads trial boundaries and assigns epochs to blocks.
     raw_path = (
             PROJECT_ROOT
             / "data"
@@ -160,30 +195,13 @@ def lda_pipeline_subject_dependent_5fold_evaluation(SUBJECT_ID):
             / f"A{SUBJECT_ID:02d}.mat"
     )
 
-    mat = loadmat(raw_path, simplify_cells=True)
-    # example on trial boundry
-    print(
-        "Start samples of the first 5 trials:",
-        mat["data"]["trial"][:5]
+    groups, splits = make_block_splits(
+        epochs,
+        y,
+        raw_path,
+        n_splits=5,
+        seed=SEED,
     )
-    # MATLAB indexing starts at 1; Python indexing starts at 0.
-    trial_starts = (
-            np.asarray(mat["data"]["trial"]).ravel().astype(int) - 1
-    )
-    print(
-        "Trial start samples (Python indexing):",
-        trial_starts[:5]
-    )
-    # ------------------------------------------------------------
-    # Assign each epoch to its original trial, then to the enclosing block.
-    # ------------------------------------------------------------
-    trial_ids = np.searchsorted(
-        trial_starts,  # trials boundries: an array of each trial starting sample for ex.: [100,300,500,700]
-        epochs.events[:, 0],  # a column where each row is the starting sample of each epoch for ex.: 150 --> epoch 2
-        side="right"
-    ) - 1
-
-    groups = trial_ids_to_block_ids(trial_ids, len(trial_starts))
 
     print("Grouping level: block (five consecutive character trials per block)")
     print("Number of blocks:", len(np.unique(groups)))
@@ -200,18 +218,12 @@ def lda_pipeline_subject_dependent_5fold_evaluation(SUBJECT_ID):
     print("Grouping checks passed.")
 
     # ------------------------------------------------------------
-    # get GROUPED SPLITS.
-    # ------------------------------------------------------------
-    # GROUPED: keep each block together; STRATIFIED: approximately preserve class ratios.
-    # Note: Only sample counts, labels and groups are needed for splitting.
-    splits = make_grouped_splits(y, groups, seed=SEED)
-
-    # ------------------------------------------------------------
     # Start the 5 Fold Cross Validation.
     # ------------------------------------------------------------
 
     # Reset results for the current subject.
     fold_results = []
+    feature_count = None
     total_cm = np.zeros((2, 2), dtype=int)
     split_records = []
     for fold, (train_idx, test_idx) in enumerate(splits, start=1):
@@ -220,7 +232,9 @@ def lda_pipeline_subject_dependent_5fold_evaluation(SUBJECT_ID):
         shared_groups = np.intersect1d(groups[train_idx], groups[test_idx])
         # CHECK PASSED.
         # START EVALUATING THIS FOLD.
-        metrics, cm = evaluate_fold(X, y, train_idx, test_idx)
+        metrics, cm, feature_count = evaluate_epoch_fold(
+            epochs, y, train_idx, test_idx
+        )
         fold_results.append({"fold": fold, **metrics})
         # APPEND train-test-arrangment of indices used in this fold.
         split_records.append({
@@ -297,7 +311,7 @@ def lda_pipeline_subject_dependent_5fold_evaluation(SUBJECT_ID):
     manifest = {
         "subject_id": SUBJECT_ID,
         "seed": SEED,
-        "splitter": "StratifiedGroupKFold",
+        "splitter": "src.validation.block_split.make_block_splits (StratifiedGroupKFold)",
         "n_splits": 5,
         "shuffle": True,
         "grouping": {
@@ -309,13 +323,17 @@ def lda_pipeline_subject_dependent_5fold_evaluation(SUBJECT_ID):
             "trials_per_block": TRIALS_PER_BLOCK,
         },
         "labels": {"NonTarget": 1, "Target": 2},
-        "feature_shape": list(X.shape),
+        "feature_shape": [len(epochs), feature_count],
         "feature_configuration": {
-            "cropping_window_ms": ext.CROPPING_WINDOW,
-            "window_range_ms": ext.WINDOW_RANGE,
-            "step_ms": ext.STEP,
-            "channels": ext.N_CHANNELS,
-            "sampling_frequency_hz": ext.S_Freq,
+            "extractor": "FeatureExtraction",
+            "cropping_window_ms": list(ext.FeatureExtraction().cropping_window),
+            "n_components": ext.FeatureExtraction().n_components,
+            "window_threshold": ext.FeatureExtraction().threshold,
+            "window_offset_samples": ext.FeatureExtraction().offset,
+        },
+        "artifact_rejection": {
+            "method": "autoreject",
+            "fit_scope": "training epochs within each fold",
         },
         "preprocessed_file": str(epochs_path.relative_to(PROJECT_ROOT)),
         "preprocessed_sha256": sha256_file(epochs_path),
