@@ -42,7 +42,7 @@ def make_block_splits(epochs, labels, mat_path, n_splits=5, seed=42):
 
     ## np.zeros(len(labels)) is place Holder For the Needed Features (X)
     ## it returns array of splits
-    # eachh split has two arrays --> [train idx] , [test idx]
+    # eachh split has two arrays --> [[train idx] , [test idx]]
     splits = list(cv.split(np.zeros(len(labels)), labels, block_ids))
 
     # Step 5: safety check, no block may appear on both sides

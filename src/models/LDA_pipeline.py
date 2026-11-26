@@ -255,7 +255,7 @@ def run_holdout_evaluation(subjects: list[int]):
         f"subject_{subject_id}": int(subject_id in subjects)
         for subject_id in range(1, 9)
     }
-    selected_subjects["artifact_rejection_method"] = "autoreject"
+    selected_subjects["artifact_rejection_method"] = "Studt Itterative improvement and dynamic programminf"
     reporter.evaluate(y_true, predictions, probabilities, selected_subjects)
 
 

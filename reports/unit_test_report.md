@@ -1,14 +1,16 @@
 # Unit Test Report
 
 - **Project:** EEG P300 Recognition Assessment
-- **Run date:** 2026-10-23 00:43:44 EEST
-- **Command:** `/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pycharm/_jb_pytest_runner.py '/Users/ziadelsisi/Hello World/Projects/Graduation Project /eeg-p300-recognition-assessment/tests/test_synthetic_timing.py'`
-- **Overall status:** PASSED
-- **Results:** 3 passed; 0 failed; 0 errors; 0 skipped; 0 xfailed; 0 xpassed
-- **Duration:** 0.27 seconds
+- **Run date:** 2026-11-26 19:47:15 EET
+- **Command:** `/Users/ziadelsisi/.local/share/virtualenvs/eeg-p300-recognition-assessment-gan_qdjr/bin/pytest -q`
+- **Overall status:** FAILED
+- **Results:** 82 passed; 1 failed; 0 errors; 0 skipped; 0 xfailed; 0 xpassed
+- **Duration:** 12.21 seconds
 
 ## Test files collected
 
+- `imprint/tests/test_synthetic_eeg.py` — 72 test(s)
+- `tests/test_all.py` — 8 test(s)
 - `tests/test_synthetic_timing.py` — 3 test(s)
 
 ## Scope
