@@ -1,0 +1,135 @@
+# Central Imprint configuration.
+# Values marked null are intentionally unspecified by the architecture baseline;
+# implementation must require them before running the affected operation.
+
+config_version: 1
+
+source:
+  # Supported architecture options: synthetic, erp_core.
+  type: synthetic
+  participant_id: null
+  erp_core:
+    data_root: null
+    dataset_version: null
+    session: null
+    # Optional, explicit evaluation-only conversion. Never treated as genuine CIT truth.
+    pseudo_probe_transformation: null
+
+recording:
+  # Canonical internal unit and continuous data shape from the architecture.
+  signal_unit: V
+  data_dimensions: [channels, samples]
+  channel_names: [Fp1, Fp2, C3, C4, Pz, Oz, O1, O2]
+  required_channels: [Pz]
+  optional_eog_channels: []
+  missing_channel_policy: error
+
+processing:
+  # Frequency bounds are intentionally unset pending the approved processing spec.
+  filter:
+    enabled: true
+    method: null
+    low_cutoff_hz: null
+    high_cutoff_hz: null
+    order: null
+  epoch:
+    # Relative to each stimulus onset; seconds.
+    start_seconds: null
+    end_seconds: null
+    dimensions: [epochs, channels, times]
+  baseline:
+    enabled: true
+    start_seconds: null
+    end_seconds: null
+  artifacts:
+    mode: null # e.g. annotate, reject, or a specified correction method
+    method: null
+    parameters: {}
+  eog_regression:
+    enabled: false
+    require_eog_channels: true
+    fitting_strategy: null
+  insufficient_data_policy: inconclusive
+
+analysis:
+  event_categories: [PROBE, IRRELEVANCE, TARGET]
+  primary_comparison: [PROBE, IRRELEVANCE]
+  target_role: attention_check
+  p300:
+    channel: Pz
+    measurement: null # Project-approved amplitude/feature definition.
+    window_start_seconds: null
+    window_end_seconds: null
+  bootstrap:
+    method: equal_count
+    iterations: null
+    seed: 42
+    statistic: null
+    confidence_level: null
+  attention_check:
+    minimum_usable_target_epochs: null
+    rule: null
+  blink_check:
+    enabled: false
+    required_channels: []
+    rule: null
+  countermeasure_checks:
+    enabled: false
+    rules: []
+  decision:
+    # Outcome vocabulary is fixed by the architecture; decision thresholds/rules
+    # must be supplied by the approved scientific analysis specification.
+    outcomes: [RECOGNIZES, DOES_NOT_RECOGNIZE, INCONCLUSIVE]
+    rule: null
+    thresholds: {}
+    inconclusive_reasons: []
+
+synthetic:
+  # Values follow the supplied generator defaults; amplitudes are in microvolts.
+  n_channels: 8
+  sampling_rate: 250.0
+  duration_s: 10.0
+  brain_noise_uv: 8.0
+  alpha_uv: 10.0
+  alpha_band_hz: [8.0, 12.0]
+  line_noise_uv: 5.0
+  line_freq_hz: 50.0
+  drift_uv: 30.0
+  drift_band_hz: [0.05, 0.5]
+  seed: 42
+  ground_truth:
+    enabled: true
+    output_separate_from_recording: true
+
+evaluation:
+  enabled: true
+  metrics: []
+  inconclusive_policy: null
+  preserve_metric_denominators: true
+  stratify_by_condition: true
+  keep_proxy_evaluation_labelled: true
+
+reproducibility:
+  seed: 42
+  run_id: null # Generate at run time when omitted.
+  capture_effective_config: true
+  capture_overrides: true
+  capture_code_revision: true
+  capture_software_versions: true
+  capture_source_identity: true
+
+reporting:
+  output_directory: results/imprint
+  formats: [json]
+  include_effective_config: true
+  include_provenance: true
+  include_processing_quality: true
+
+logging:
+  level: INFO
+  include_run_id: true
+  include_pseudonymous_participant_id: true
+  include_source: true
+  include_configuration_reference: true
+  include_processing_summary: true
+  include_ground_truth: false

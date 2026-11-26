@@ -29,6 +29,7 @@ The main event labels are `1 = NonTarget` and `2 = Target`.
 ## Repository layout
 
 ```text
+imprint/             Imprint package, config, and tests in this repository
 src/
 ├── analysis/       ERP analysis
 ├── evaluation/     Block-based five-fold and LOSO evaluation
@@ -48,6 +49,14 @@ reports/             Test and traceability reports
 results/             Evaluation metrics, manifests, and analysis outputs
 tests/               Automated checks
 ```
+
+Imprint is kept in its own top-level folder inside this repository. Its source, config, and tests live under `imprint/src/imprint/`, `imprint/configs/`, and `imprint/tests/`. It shares this repository's Git history and is not a nested Git repository or separately installable project. To import Imprint from the repository root, add its source directory to `PYTHONPATH`:
+
+```sh
+PYTHONPATH=imprint/src pipenv run python -c 'from imprint.config import GeneratorConfig'
+```
+
+The single central Imprint configuration is `imprint/configs/default.yaml`. It covers source selection, recording conventions, processing, analysis, synthetic generation, evaluation, reproducibility, reporting, and logging.
 
 ## Setup
 
