@@ -11,17 +11,33 @@ from .components import (
     line_noise,
     slow_drift,
 )
-from ...config import GeneratorConfig
+from ...config.loader import load_config
+from ...config.settings import ImprintConfig, SyntheticSettings
 
 
-def generate_base_recording(cfg: GeneratorConfig) -> np.ndarray:
+ConfigInput = SyntheticSettings | ImprintConfig
+
+
+def _synthetic_settings(cfg: ConfigInput | None) -> SyntheticSettings:
+    if cfg is None:
+        return load_config().synthetic
+    if isinstance(cfg, ImprintConfig):
+        return cfg.synthetic
+    if isinstance(cfg, SyntheticSettings):
+        return cfg
+    raise TypeError("cfg must be an ImprintConfig or SyntheticSettings")
+
+
+def generate_base_recording(cfg: ConfigInput) -> np.ndarray:
     """Return zero-valued continuous data: (channels, samples), float64, volts."""
+    cfg = _synthetic_settings(cfg)
     cfg.validate()
     return np.zeros((cfg.n_channels, cfg.n_samples), dtype=np.float64)
 
 
-def generate_components(cfg: GeneratorConfig) -> dict[str, np.ndarray]:
+def generate_components(cfg: ConfigInput) -> dict[str, np.ndarray]:
     """Return each signal component separately, in volts."""
+    cfg = _synthetic_settings(cfg)
     cfg.validate()
     rngs = component_rngs(cfg)
     return {
@@ -32,14 +48,14 @@ def generate_components(cfg: GeneratorConfig) -> dict[str, np.ndarray]:
     }
 
 
-def generate_recording(cfg: GeneratorConfig | None = None) -> np.ndarray:
+def generate_recording(cfg: ConfigInput | None = None) -> np.ndarray:
     """Return synthetic continuous EEG: (channels, samples), float64, volts.
 
     This function returns signal data only. Participant condition and other
     evaluation labels must be generated and returned separately by a source
     adapter; they are never embedded in this array.
     """
-    cfg = cfg or GeneratorConfig()
+    cfg = _synthetic_settings(cfg)
     cfg.validate()
     data = generate_base_recording(cfg)
     for comp in generate_components(cfg).values():

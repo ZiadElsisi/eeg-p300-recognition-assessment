@@ -123,10 +123,10 @@ def test_numpy_integer_types_accepted():
     assert generate_recording(cfg).shape[0] == 4
 
 
-# ---------------- sample-count rounding / short recordings ----------------
-def test_non_integer_product_is_rounded_and_realized_duration_exposed():
+# ---------------- sample-count truncation / short recordings ----------------
+def test_non_integer_product_uses_integer_sample_count_and_exposes_realized_duration():
     cfg = GeneratorConfig(sampling_rate=333, duration_s=0.01, line_noise_uv=0)
-    assert cfg.n_samples == 3  # round(3.33)
+    assert cfg.n_samples == 3  # int(3.33)
     assert cfg.duration_realized_s == pytest.approx(3 / 333)
     assert generate_recording(cfg).shape == (8, 3)
 
